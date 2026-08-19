@@ -1,12 +1,1665 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>C Programming — Unit 1 Fundamentals</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C Programming — Unit 1 Fundamentals</title>
+  <style>
+    /* ================= RESET & BASE ================= */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #020617; color: #e2e8f0; line-height: 1.6;
+      overflow-x: hidden; min-height: 100vh;
+    }
+    p, li, h1, h2, h3, h4, span, td, th, dd, dt { overflow-wrap: break-word; word-break: break-word; }
+    pre, code, table { max-width: 100%; }
+    pre { -webkit-overflow-scrolling: touch; }
+    ::selection { background: rgba(16,185,129,.35); }
+
+    /* ================= LAYOUT ================= */
+    .header {
+      position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; background: rgba(2,6,23,.92); backdrop-filter: blur(8px);
+      border-bottom: 1px solid #1e293b;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .logo {
+      width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+      background: linear-gradient(135deg,#34d399,#22d3ee,#8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; color: #fff; font-size: 17px;
+      box-shadow: 0 4px 18px rgba(52,211,153,.25);
+    }
+    .brand-title { font-size: 14.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .brand-sub { font-size: 11px; color: #94a3b8; display: none; }
+    .badge {
+      background: rgba(16,185,129,.12); color: #6ee7b7; font-weight: 700; font-size: 11px;
+      border-radius: 999px; padding: 4px 11px; flex-shrink: 0;
+    }
+    .menu-btn {
+      display: flex; align-items: center; justify-content: center; width: 38px; height: 38px;
+      border: 1px solid #334155; background: #0f172a; border-radius: 10px; color: #cbd5e1; cursor: pointer;
+    }
+    .menu-btn:active { transform: scale(.95); }
+    .menu-btn svg { width: 20px; height: 20px; }
+
+    .layout { display: flex; max-width: 1400px; margin: 0 auto; }
+    .sidebar {
+      display: none; position: sticky; top: 59px; height: calc(100vh - 59px); width: 280px; flex-shrink: 0;
+      border-right: 1px solid #1e293b; padding: 22px 16px; overflow-y: auto; background: rgba(2,6,23,.6);
+    }
+    .main { flex: 1; min-width: 0; padding: 22px 14px 60px; }
+    .wrap { max-width: 780px; margin: 0 auto; }
+
+    /* drawer */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 40; opacity: 0; pointer-events: none; transition: opacity .3s; }
+    .overlay.open { opacity: 1; pointer-events: auto; }
+    .drawer {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 86%; max-width: 320px; z-index: 50;
+      background: #020617; border-right: 1px solid #1e293b; padding: 16px 12px;
+      transform: translateX(-105%); transition: transform .3s; overflow-y: auto;
+    }
+    .drawer.open { transform: translateX(0); }
+    .drawer-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 4px; }
+    .drawer-head b { color: #fff; font-size: 14px; }
+    .x-btn { border: 1px solid #334155; background: #0f172a; color: #94a3b8; border-radius: 9px; width: 32px; height: 32px; cursor: pointer; }
+
+    /* nav */
+    .nav-label { font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #64748b; padding: 0 6px 10px; }
+    .nav { display: flex; flex-direction: column; gap: 7px; }
+    .nav-btn {
+      display: flex; gap: 10px; align-items: flex-start; text-align: left; width: 100%; padding: 10px;
+      border: 1px solid transparent; background: none; border-radius: 13px; cursor: pointer; transition: background .15s, border-color .15s;
+    }
+    .nav-btn:hover { background: rgba(15,23,42,.7); border-color: #1e293b; }
+    .nav-btn.active { background: #1e293b; border-color: #475569; }
+    .nav-ico { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 3px 12px rgba(0,0,0,.4); opacity: .85; }
+    .nav-btn.active .nav-ico { opacity: 1; }
+    .nav-txt { min-width: 0; flex: 1; }
+    .nav-meta { display: flex; align-items: center; gap: 6px; }
+    .nav-ch { font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #64748b; }
+    .nav-btn.active .nav-ch { color: #6ee7b7; }
+    .deep-tag { font-size: 8.5px; font-weight: 800; text-transform: uppercase; background: rgba(139,92,246,.2); color: #c4b5fd; border-radius: 4px; padding: 1px 5px; }
+    .nav-name { font-size: 13px; font-weight: 600; color: #cbd5e1; line-height: 1.35; }
+    .nav-btn.active .nav-name { color: #fff; }
+    .nav-sub { font-size: 10.5px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .progress-box { margin-top: 16px; border: 1px solid #1e293b; background: rgba(15,23,42,.5); border-radius: 13px; padding: 13px; }
+    .progress-top { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 7px; }
+    .progress-top span:first-child { color: #cbd5e1; font-weight: 600; }
+    .progress-top b { color: #6ee7b7; }
+    .track { height: 6px; background: #1e293b; border-radius: 999px; overflow: hidden; }
+    .bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg,#34d399,#22d3ee); transition: width .5s; }
+
+    /* ================= CONTENT ================= */
+    .chapter { display: none; }
+    .chapter.active { display: block; }
+    .chapter-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #94a3b8; font-weight: 600; flex-wrap: wrap; }
+    .chp-ico { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 3px 10px rgba(0,0,0,.4); }
+    .hero { border-bottom: 1px solid #1e293b; padding-bottom: 22px; margin-bottom: 26px; }
+    .pills { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+    .pill { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; border-radius: 999px; padding: 4px 11px; }
+    .pill.green { background: rgba(16,185,129,.18); color: #6ee7b7; }
+    .pill.violet { background: rgba(139,92,246,.18); color: #c4b5fd; }
+    .pill.blue { background: rgba(56,189,248,.15); color: #7dd3fc; }
+    .pill.pink { background: rgba(244,114,182,.15); color: #f9a8d4; }
+    .pill.rose { background: rgba(244,63,94,.15); color: #fda4af; }
+    .pill.amber { background: rgba(245,158,11,.15); color: #fcd34d; }
+    .muted { font-size: 11px; color: #64748b; }
+    .h1 {
+      font-size: 26px; line-height: 1.25; font-weight: 800; margin-bottom: 8px;
+      background: linear-gradient(90deg,#6ee7b7,#67e8f9,#a78bfa);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+    }
+    .hero .p { color: #94a3b8; font-size: 14px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+    .chip { font-size: 11px; color: #94a3b8; border: 1px solid #334155; background: rgba(15,23,42,.6); border-radius: 9px; padding: 4px 10px; }
+
+    .obj-box { border: 1px solid rgba(139,92,246,.3); background: rgba(139,92,246,.05); border-radius: 16px; padding: 18px; margin-bottom: 8px; }
+    .obj-box h3 { color: #c4b5fd; font-size: 14.5px; margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
+    .obj-list { display: grid; grid-template-columns: 1fr; gap: 7px; font-size: 13px; color: #cbd5e1; }
+    .obj-list li { list-style: none; display: flex; gap: 8px; }
+    .obj-list li::before { content: "✓"; color: #a78bfa; flex-shrink: 0; }
+
+    .sec { margin: 34px 0; }
+    .h2 { font-size: 19px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .h2::before { content: ""; width: 5px; height: 22px; border-radius: 99px; background: linear-gradient(180deg,#34d399,#22d3ee); flex-shrink: 0; }
+    .h3 { font-size: 15.5px; font-weight: 600; color: #6ee7b7; margin: 18px 0 8px; }
+    .p { color: #cbd5e1; font-size: 14px; margin-bottom: 10px; }
+    .p strong { color: #fff; }
+    .p em { color: #94a3b8; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr; gap: 11px; margin: 12px 0; }
+    .grid3 { display: grid; grid-template-columns: 1fr; gap: 11px; margin: 12px 0; }
+    .grid4 { display: grid; grid-template-columns: 1fr; gap: 11px; margin: 12px 0; }
+    .card { border: 1px solid #1e293b; background: rgba(30,41,59,.35); border-radius: 14px; padding: 14px; min-width: 0; }
+    .card b, .card .t { color: #fff; font-size: 14px; display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+    .card .s { color: #94a3b8; font-size: 12.5px; }
+    .card .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; color: #6ee7b7; margin-bottom: 6px; }
+
+    /* notes */
+    .note { border-radius: 14px; padding: 14px 16px; margin: 14px 0; font-size: 13px; }
+    .note .nt { font-weight: 700; font-size: 13px; margin-bottom: 4px; display: flex; gap: 7px; align-items: center; }
+    .note.info { border: 1px solid rgba(56,189,248,.4); background: rgba(56,189,248,.08); } .note.info .nt { color: #7dd3fc; }
+    .note.tip  { border: 1px solid rgba(16,185,129,.4); background: rgba(16,185,129,.08); } .note.tip .nt { color: #6ee7b7; }
+    .note.warn { border: 1px solid rgba(245,158,11,.4); background: rgba(245,158,11,.08); } .note.warn .nt { color: #fcd34d; }
+    .note.exam { border: 1px solid rgba(139,92,246,.4); background: rgba(139,92,246,.08); } .note.exam .nt { color: #c4b5fd; }
+
+    /* inline code */
+    code.in {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .86em;
+      background: #1e293b; color: #6ee7b7; border-radius: 6px; padding: 1.5px 6px;
+    }
+
+    /* code blocks */
+    .code {
+      border: 1px solid #334155; background: #020617; border-radius: 14px; margin: 14px 0; overflow: hidden;
+      box-shadow: 0 10px 28px rgba(0,0,0,.35);
+    }
+    .code-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #0b1220; border-bottom: 1px solid #1e293b; padding: 8px 13px; }
+    .dots { display: flex; gap: 5px; align-items: center; }
+    .dots i { width: 10px; height: 10px; border-radius: 99px; }
+    .dots i:nth-child(1){background:#f87171}.dots i:nth-child(2){background:#fbbf24}.dots i:nth-child(3){background:#34d399}
+    .code-head .fn { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #94a3b8; margin-left: 8px; }
+    .copy-btn { font-size: 10px; font-weight: 700; color: #94a3b8; border: 1px solid #334155; background: none; border-radius: 7px; padding: 3px 9px; cursor: pointer; }
+    .copy-btn:hover { color: #e2e8f0; border-color: #475569; }
+    .code pre { padding: 13px 15px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.65; color: #dbeafe; }
+    .out { border-top: 1px solid #1e293b; background: #000; padding: 10px 15px; }
+    .out .ol { font-size: 9.5px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; color: #34d399; margin-bottom: 3px; }
+    .out pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #6ee7b7; white-space: pre-wrap; word-break: break-word; }
+
+    /* syntax colors */
+    .k { color: #a78bfa; font-weight: 600; }
+    .s { color: #fbbf24; }
+    .c { color: #64748b; font-style: italic; }
+    .n { color: #67e8f9; }
+    .pp { color: #f472b6; font-weight: 600; }
+    .f { color: #7dd3fc; }
+
+    /* tables */
+    .tblwrap { margin: 14px 0; margin-inline: -12px; padding-inline: 12px; overflow-x: auto; }
+    .tbl { width: 100%; min-width: 460px; border-collapse: collapse; border: 1px solid #334155; border-radius: 14px; overflow: hidden; font-size: 13px; }
+    .tbl th { background: #1e293b; color: #e2e8f0; text-align: left; padding: 10px 13px; font-weight: 600; font-size: 12.5px; }
+    .tbl td { border-top: 1px solid #1e293b; padding: 10px 13px; color: #cbd5e1; background: rgba(15,23,42,.5); vertical-align: top; }
+    .tbl tr:nth-child(even) td { background: rgba(30,41,59,.45); }
+    .cap { font-size: 10.5px; color: #64748b; text-align: center; margin-top: 5px; }
+
+    /* timeline */
+    .tl-item { display: flex; gap: 13px; }
+    .tl-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+    .tl-dot { width: 34px; height: 34px; border-radius: 99px; border: 2px solid #475569; background: #0f172a; color: #94a3b8; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+    .tl-dot.hot { border-color: #34d399; background: rgba(16,185,129,.15); color: #6ee7b7; box-shadow: 0 0 14px rgba(52,211,153,.25); }
+    .tl-line { width: 2px; flex: 1; background: #334155; margin: 3px 0; }
+    .tl-body { flex: 1; min-width: 0; padding-bottom: 18px; }
+    .tl-year { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; font-size: 13px; color: #94a3b8; margin-right: 8px; }
+    .tl-year.hot { color: #6ee7b7; }
+    .tl-title { color: #fff; font-weight: 600; font-size: 13.5px; }
+    .tl-desc { color: #94a3b8; font-size: 12.5px; margin-top: 3px; }
+
+    /* evolution chain */
+    .chain { display: flex; align-items: center; gap: 9px; overflow-x: auto; padding: 4px 2px 8px; margin: 14px 0; }
+    .chain .l { border: 1px solid #334155; background: #0f172a; border-radius: 10px; padding: 8px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 700; font-size: 13px; color: #94a3b8; white-space: nowrap; }
+    .chain .l.final { border-color: #34d399; background: rgba(16,185,129,.15); color: #6ee7b7; box-shadow: 0 0 16px rgba(52,211,153,.2); }
+    .chain .ar { color: #475569; flex-shrink: 0; }
+
+    /* pipeline */
+    .pipe-item { display: flex; gap: 13px; }
+    .pipe-rail { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+    .pipe-n { width: 36px; height: 36px; border-radius: 11px; color: #fff; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+    .pipe-line { width: 2px; flex: 1; background: linear-gradient(180deg,#475569,#334155); margin: 4px 0; }
+    .pipe-body { flex: 1; min-width: 0; padding-bottom: 16px; }
+    .pipe-t { color: #fff; font-weight: 700; font-size: 13.5px; }
+    .pipe-cmd { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; color: #64748b; margin-left: 8px; }
+    .pipe-d { color: #94a3b8; font-size: 12.5px; margin-top: 2px; }
+
+    /* explorer */
+    .explorer { border: 1px solid #334155; border-radius: 14px; overflow: hidden; margin: 12px 0; background: #020617; }
+    .exp-line { display: flex; gap: 10px; width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid #1e293b; padding: 10px 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; color: #94a3b8; cursor: pointer; }
+    .exp-line:last-child { border-bottom: none; }
+    .exp-line:hover { background: rgba(15,23,42,.7); }
+    .exp-line.on { background: #1e293b; color: #fff; }
+    .exp-n { width: 16px; text-align: right; color: #475569; flex-shrink: 0; }
+    .exp-code { word-break: break-all; }
+    .exp-detail { border: 1px solid rgba(16,185,129,.3); background: rgba(16,185,129,.05); border-radius: 14px; padding: 15px; margin-top: 12px; }
+    .exp-tag { font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; background: rgba(16,185,129,.18); color: #6ee7b7; border-radius: 999px; padding: 2px 10px; margin-right: 8px; }
+    .exp-title { color: #fff; font-weight: 700; font-size: 14.5px; }
+    .exp-desc { color: #cbd5e1; font-size: 13px; margin-top: 7px; }
+
+    /* keyword grid */
+    .kw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 12px 0; }
+    .kw { border: 1px solid #1e293b; background: rgba(15,23,42,.55); border-radius: 9px; text-align: center; padding: 7px 2px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #a78bfa; }
+
+    /* ascii grid */
+    .asc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 10px 0; }
+    .asc { border: 1px solid #1e293b; background: rgba(15,23,42,.55); border-radius: 9px; padding: 7px; text-align: center; }
+    .asc .c1 { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; color: #fcd34d; }
+    .asc .c2 { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 10.5px; color: #64748b; }
+
+    /* token chips */
+    .tok-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 10px 0; }
+    .tok { border: 1px solid #1e293b; background: rgba(15,23,42,.55); border-radius: 9px; padding: 5px 10px; }
+    .tok b { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; color: #fff; font-weight: 500; }
+    .tok span { font-size: 10px; color: #64748b; margin-left: 6px; }
+
+    /* do / dont */
+    .dodont { display: grid; grid-template-columns: 1fr; gap: 11px; margin: 12px 0; }
+    .do-box { border: 1px solid rgba(16,185,129,.3); background: rgba(16,185,129,.05); border-radius: 14px; padding: 15px; }
+    .do-box h4 { color: #6ee7b7; font-size: 13.5px; margin-bottom: 9px; }
+    .dont-box { border: 1px solid rgba(248,113,113,.3); background: rgba(248,113,113,.05); border-radius: 14px; padding: 15px; }
+    .dont-box h4 { color: #fca5a5; font-size: 13.5px; margin-bottom: 9px; }
+    .do-box ul, .dont-box ul { list-style: none; font-size: 12.5px; color: #cbd5e1; display: flex; flex-direction: column; gap: 7px; }
+    .do-box li::before { content: "• "; color: #34d399; }
+    .dont-box li::before { content: "• "; color: #f87171; }
+    del { color: #f87171; }
+
+    /* summary */
+    .summ { border: 1px solid #334155; border-radius: 18px; padding: 20px; margin-top: 34px; background: linear-gradient(135deg, rgba(30,41,59,.7), rgba(15,23,42,.9)); }
+    .summ h3 { color: #fff; font-size: 17px; margin-bottom: 12px; display: flex; gap: 8px; }
+    .summ .pt { background: rgba(2,6,23,.55); border-radius: 11px; padding: 10px 13px; font-size: 13px; color: #cbd5e1; margin-bottom: 9px; }
+    .summ .pt b { color: #6ee7b7; }
+
+    /* qa */
+    .qa { border: 1px solid rgba(16,185,129,.3); background: rgba(16,185,129,.04); border-radius: 16px; padding: 16px; margin-top: 20px; }
+    .qa > h3 { color: #6ee7b7; font-size: 15px; margin-bottom: 10px; }
+    details { border: 1px solid #334155; background: rgba(15,23,42,.5); border-radius: 12px; margin: 8px 0; overflow: hidden; }
+    summary { padding: 12px 14px; cursor: pointer; font-size: 13px; font-weight: 600; color: #fff; list-style: none; display: flex; justify-content: space-between; gap: 10px; }
+    summary::after { content: "+"; color: #34d399; font-weight: 700; flex-shrink: 0; }
+    details[open] summary::after { content: "–"; }
+    details .a { border-top: 1px solid #1e293b; background: rgba(2,6,23,.5); padding: 12px 14px; font-size: 13px; color: #cbd5e1; }
+
+    /* quiz */
+    .quiz-box { border: 1px solid rgba(139,92,246,.3); background: rgba(139,92,246,.05); border-radius: 16px; padding: 16px; margin-top: 20px; }
+    .quiz-box > h3 { color: #c4b5fd; font-size: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .q-item { border: 1px solid #334155; background: rgba(15,23,42,.5); border-radius: 13px; padding: 13px; margin-top: 12px; }
+    .q-text { font-size: 13.5px; font-weight: 600; color: #fff; margin-bottom: 10px; }
+    .q-text .qn { color: #a78bfa; margin-right: 6px; }
+    .opt { display: flex; gap: 9px; align-items: flex-start; width: 100%; text-align: left; border: 1px solid #334155; background: rgba(30,41,59,.4); border-radius: 10px; padding: 9px 11px; margin-bottom: 7px; font-size: 13px; color: #cbd5e1; cursor: pointer; transition: all .15s; }
+    .opt:hover:not(:disabled) { border-color: #475569; }
+    .opt:disabled { cursor: default; opacity: .65; }
+    .opt .L { width: 20px; height: 20px; border: 1px solid #64748b; border-radius: 99px; font-size: 10.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .opt.correct { border-color: rgba(52,211,153,.7); background: rgba(16,185,129,.15); color: #a7f3d0; opacity: 1; }
+    .opt.wrong { border-color: rgba(248,113,113,.7); background: rgba(248,113,113,.15); color: #fecaca; opacity: 1; }
+    .expl { margin-top: 9px; border: 1px solid #334155; background: rgba(2,6,23,.6); border-radius: 10px; padding: 9px 11px; font-size: 12.5px; color: #94a3b8; }
+    .expl b { color: #6ee7b7; }
+    .quiz-actions { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 9px; }
+    .btn { border-radius: 11px; padding: 9px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all .15s; }
+    .btn:active { transform: scale(.97); }
+    .btn-primary { border: none; color: #fff; background: linear-gradient(90deg,#7c3aed,#d946ef); box-shadow: 0 6px 18px rgba(139,92,246,.25); }
+    .btn-ghost { border: 1px solid #334155; background: none; color: #cbd5e1; }
+    .btn-ghost:hover { border-color: #475569; }
+    .score-tag { background: rgba(139,92,246,.2); color: #ddd6fe; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 4px 11px; }
+
+    /* practice */
+    .practice { border: 1px solid rgba(245,158,11,.3); background: rgba(245,158,11,.05); border-radius: 16px; padding: 16px; margin-top: 20px; }
+    .practice h3 { color: #fcd34d; font-size: 15px; margin-bottom: 8px; }
+
+    /* pager */
+    .pager { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-top: 1px solid #1e293b; margin-top: 40px; padding-top: 20px; }
+    .pg-btn { display: flex; align-items: center; gap: 6px; border: 1px solid #334155; background: rgba(15,23,42,.6); color: #cbd5e1; border-radius: 12px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .pg-btn:active { transform: scale(.96); }
+    .pg-btn:disabled { opacity: .3; cursor: default; }
+    .pg-btn.acc { border: none; color: #fff; background: linear-gradient(90deg,#059669,#0891b2); box-shadow: 0 6px 16px rgba(16,185,129,.25); }
+    .pg-mid { font-size: 11px; color: #64748b; display: none; }
+    .dots-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 18px; }
+    .dbtn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #64748b; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+    .dbtn.on { border-color: #34d399; background: rgba(16,185,129,.2); color: #6ee7b7; }
+    footer { text-align: center; font-size: 10.5px; color: #475569; margin-top: 22px; }
+
+    /* list styling */
+    ul.nice { margin: 8px 0 8px 20px; font-size: 13.5px; color: #cbd5e1; display: flex; flex-direction: column; gap: 6px; }
+    ol.nice { margin: 8px 0 8px 20px; font-size: 13.5px; color: #cbd5e1; display: flex; flex-direction: column; gap: 6px; }
+    .dl { border: 1px solid #334155; border-radius: 14px; overflow: hidden; margin: 14px 0; }
+    .dl-row { border-bottom: 1px solid #1e293b; background: rgba(15,23,42,.45); padding: 12px 14px; }
+    .dl-row:last-child { border-bottom: none; }
+    .dl-row dt { color: #6ee7b7; font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+    .dl-row dd { color: #cbd5e1; font-size: 12.5px; }
+
+    /* ================= RESPONSIVE ================= */
+    @media (min-width: 640px) {
+      .h1 { font-size: 34px; }
+      .hero .p { font-size: 15.5px; }
+      .grid2 { grid-template-columns: repeat(2, 1fr); }
+      .grid3 { grid-template-columns: repeat(2, 1fr); }
+      .grid4 { grid-template-columns: repeat(2, 1fr); }
+      .obj-list { grid-template-columns: repeat(2, 1fr); }
+      .kw-grid { grid-template-columns: repeat(4, 1fr); }
+      .asc-grid { grid-template-columns: repeat(4, 1fr); }
+      .dodont { grid-template-columns: repeat(2, 1fr); }
+      .pg-mid { display: block; }
+      .brand-sub { display: block; }
+      .main { padding: 26px 22px 70px; }
+    }
+    @media (min-width: 1024px) {
+      .sidebar { display: block; }
+      .menu-btn { display: none; }
+      .grid3 { grid-template-columns: repeat(3, 1fr); }
+      .grid4 { grid-template-columns: repeat(4, 1fr); }
+      .kw-grid { grid-template-columns: repeat(6, 1fr); }
+      .asc-grid { grid-template-columns: repeat(6, 1fr); }
+      .h1 { font-size: 40px; }
+      .main { padding: 30px 36px 80px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ HEADER ============ -->
+  <header class="header">
+    <button class="menu-btn" id="menuBtn" aria-label="Open chapters">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+    </button>
+    <div class="brand">
+      <div class="logo">C</div>
+      <div style="min-width:0">
+        <div class="brand-title">C Programming · Unit 1</div>
+        <div class="brand-sub">Fundamentals &amp; Control Structures</div>
+      </div>
+    </div>
+    <span class="badge" id="headBadge">1/6</span>
+  </header>
+
+  <!-- ============ DRAWER (mobile) ============ -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <b>Chapters</b>
+      <button class="x-btn" id="closeDrawer" aria-label="Close">✕</button>
+    </div>
+    <div id="drawerNav"></div>
+  </aside>
+
+  <!-- ============ BODY ============ -->
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"><div id="sideNav"></div></aside>
+
+    <main class="main">
+      <div class="wrap">
+        <div class="chapter-top" id="chTop"></div>
+
+        <!-- ============================================================
+             CHAPTER 1 — IN-DEPTH
+        ============================================================ -->
+        <section class="chapter active" id="ch1">
+          <div class="hero">
+            <div class="pills">
+              <span class="pill green">Chapter 1</span>
+              <span class="pill violet">In-Depth</span>
+              <span class="muted">≈ 40 min read</span>
+            </div>
+            <h1 class="h1">Introduction to C Programming</h1>
+            <p class="p">History of C, Structure of a C program, C Conventions and the C Character Set — explained from absolute zero, step by step.</p>
+            <div class="chips">
+              <span class="chip">History of C</span><span class="chip">Structure of a Program</span>
+              <span class="chip">Compilation Process</span><span class="chip">C Conventions</span>
+              <span class="chip">Character Set</span><span class="chip">Tokens</span>
+            </div>
+          </div>
+
+          <div class="obj-box">
+            <h3>🎯 What you will be able to do after this chapter</h3>
+            <ul class="obj-list">
+              <li>Explain how C was born and why it matters</li>
+              <li>Name the 6 sections of a C program in order</li>
+              <li>Write, compile and run your first C program</li>
+              <li>Describe the 6 stages of the build process</li>
+              <li>Follow professional C naming conventions</li>
+              <li>List the C character set and count its symbols</li>
+              <li>Identify tokens inside a line of code</li>
+              <li>Recognise and fix the 4 types of errors</li>
+            </ul>
+          </div>
+
+          <!-- 1.1 -->
+          <section class="sec">
+            <h2 class="h2">1.1 Before C — Programs &amp; Programming Languages</h2>
+            <p class="p">A <strong>computer</strong> only understands <strong>machine language</strong> — pure binary 0s and 1s. A <strong>program</strong> is a set of instructions that tells the computer what to do step by step, and a <strong>programming language</strong> is the vocabulary plus grammar rules used to write those instructions.</p>
+            <h3 class="h3">Levels of Programming Languages</h3>
+            <div class="grid3">
+              <div class="card" style="border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05)">
+                <b>🔩 Low Level</b>
+                <div class="mono">Machine Language, Assembly</div>
+                <div class="s">Written in binary or mnemonics. Extremely fast but almost unreadable for humans. Machine dependent.</div>
+              </div>
+              <div class="card" style="border-color:rgba(52,211,153,.4);background:rgba(16,185,129,.06)">
+                <b>⚙️ Middle Level</b>
+                <div class="mono">C, C++</div>
+                <div class="s">Combines the power of assembly with the readability of high-level languages. This is exactly where C sits.</div>
+              </div>
+              <div class="card" style="border-color:rgba(56,189,248,.3);background:rgba(56,189,248,.05)">
+                <b>🚀 High Level</b>
+                <div class="mono">Python, Java, C#</div>
+                <div class="s">English-like, easy to read, machine independent — but slower and further from the hardware.</div>
+              </div>
+            </div>
+            <h3 class="h3">Language Translators</h3>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Translator</th><th>What it does</th><th>Input → Output</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Assembler</strong></td><td>Converts assembly language to machine code (one-to-one mapping)</td><td><code class="in">.asm → .obj</code></td></tr>
+                <tr><td><strong>Compiler</strong></td><td>Translates the WHOLE high-level program at once and reports all errors together. Faster execution.</td><td><code class="in">.c → .exe</code></td></tr>
+                <tr><td><strong>Interpreter</strong></td><td>Translates and executes one line at a time, stopping at the first error. Easier to debug, slower to run.</td><td><code class="in">line → run</code></td></tr>
+              </tbody>
+            </table></div>
+            <p class="cap">C is a compiled language — that is why we need gcc or Turbo C.</p>
+          </section>
+
+          <!-- 1.2 -->
+          <section class="sec">
+            <h2 class="h2">1.2 History of C (Complete Evolution)</h2>
+            <p class="p">The <strong>C programming language</strong> was developed by <strong style="color:#6ee7b7">Dennis M. Ritchie</strong> between 1969 and 1973, with the first usable version in <strong>1972</strong>, at the <em>Bell Telephone Laboratories</em> in Murray Hill, New Jersey, USA. He built it mainly to <strong>rewrite the UNIX operating system</strong> on a DEC PDP-11 so the OS would not have to be rewritten in assembly for every new computer.</p>
+            <div class="note exam"><div class="nt">🎓 Very Important for Exams</div>C was developed by <strong>Dennis Ritchie</strong> in <strong>1972</strong> at <strong>Bell Labs</strong>, mainly to write the <strong>UNIX operating system</strong>. Its direct ancestor is the <strong>B</strong> language by Ken Thompson, which came from <strong>BCPL</strong> by Martin Richards.</div>
+
+            <h3 class="h3">The Family Tree of C</h3>
+            <div class="timeline" style="margin-top:10px">
+              <div class="tl-item"><div class="tl-rail"><div class="tl-dot">1</div><div class="tl-line"></div></div><div class="tl-body"><span class="tl-year">1960</span><span class="tl-title">ALGOL 60</span><div class="tl-desc">Built by an international committee. The first language with a truly formal, structured grammar, but too abstract for commercial work. C inherited its block-structured idea.</div></div></div>
+              <div class="tl-item"><div class="tl-rail"><div class="tl-dot">2</div><div class="tl-line"></div></div><div class="tl-body"><span class="tl-year">1963</span><span class="tl-title">CPL (Combined Programming Language)</span><div class="tl-desc">Created by Cambridge and London universities. More practical than ALGOL but still large, slow and hard to implement.</div></div></div>
+              <div class="tl-item"><div class="tl-rail"><div class="tl-dot">3</div><div class="tl-line"></div></div><div class="tl-body"><span class="tl-year">1967</span><span class="tl-title">BCPL (Basic CPL)</span><div class="tl-desc">Martin Richards stripped CPL down to the essentials — a tiny language with no data types at all, ideal for writing compilers and system software.</div></div></div>
+              <div class="tl-item"><div class="tl-rail"><div class="tl-dot">4</div><div class="tl-line"></div></div><div class="tl-body"><span class="tl-year">1970</span><span class="tl-title">B Language</span><div class="tl-desc">Ken Thompson, a colleague of Ritchie, rewrote BCPL for the UNIX project on a PDP-7. B was also typeless and word-oriented, which made it inefficient on the newer byte-addressed PDP-11.</div></div></div>
+              <div class="tl-item"><div class="tl-rail"><div class="tl-dot hot">★</div><div class="tl-line"></div></div><div class="tl-body"><span class="tl-year hot">1972</span><span class="tl-title">C Language</span><div class="tl-desc">Dennis Ritchie added data types (char, int, float), arrays, structures and pointers to B, producing a fast, small, portable language. In 1973 UNIX itself was rewritten in C, proving a high-level language could build an operating system.</div></div></div>
+              <div class="tl-item"><div class="tl-rail"><div class="tl-dot">6</div><div class="tl-line"></div></div><div class="tl-body"><span class="tl-year">1978</span><span class="tl-title">K&amp;R C — "The C Bible"</span><div class="tl-desc">Brian Kernighan and Dennis Ritchie published the book "The C Programming Language". This book, not a committee, became the de-facto standard and is still the best selling programming book ever.</div></div></div>
+              <div class="tl-item"><div class="tl-rail"><div class="tl-dot">7</div><div class="tl-line"></div></div><div class="tl-body"><span class="tl-year">1983–89</span><span class="tl-title">ANSI C (C89 / C90)</span><div class="tl-desc">Because every compiler maker added its own extras, ANSI formed committee X3J11 in 1983 to standardise C. Approved in 1989 as ANSI C or C89; ISO adopted it in 1990 as C90. This is what most textbooks teach.</div></div></div>
+              <div class="tl-item"><div class="tl-rail"><div class="tl-dot">8</div><div class="tl-line"></div></div><div class="tl-body"><span class="tl-year">1999</span><span class="tl-title">C99</span><div class="tl-desc">Added // single-line comments, the long long type, declarations anywhere inside a block, inline functions and the stdbool.h boolean type.</div></div></div>
+              <div class="tl-item"><div class="tl-rail"><div class="tl-dot">9</div><div class="tl-line"></div></div><div class="tl-body"><span class="tl-year">2011</span><span class="tl-title">C11</span><div class="tl-desc">Added multi-threading support (thread.h), anonymous structures, bounds-checked functions, and made variable-length arrays optional.</div></div></div>
+              <div class="tl-item"><div class="tl-rail"><div class="tl-dot">10</div></div><div class="tl-body"><span class="tl-year">2018 / 2024</span><span class="tl-title">C17 and C23</span><div class="tl-desc">C17 was a bug-fix release. C23, the newest standard, brings a true bool type, constexpr, binary literals like 0b1010 and cleaner headers.</div></div></div>
+            </div>
+
+            <h3 class="h3">Evolution chain — memorise this order</h3>
+            <div class="chain">
+              <span class="l">ALGOL</span><span class="ar">→</span>
+              <span class="l">CPL</span><span class="ar">→</span>
+              <span class="l">BCPL</span><span class="ar">→</span>
+              <span class="l">B</span><span class="ar">→</span>
+              <span class="l final">C</span>
+            </div>
+
+            <div class="note info"><div class="nt">💡 Why is it named "C"?</div>Simply because it succeeded <strong>B</strong>, which succeeded <strong>BCPL</strong>. There had been a brief experimental language called D before C, so Ritchie skipped ahead and used the next free letter — C.</div>
+          </section>
+
+          <!-- 1.3 -->
+          <section class="sec">
+            <h2 class="h2">1.3 Features (Characteristics) of C</h2>
+            <p class="p">These are the classic reasons C is still taught first and still powers operating systems, databases and embedded devices today.</p>
+            <div class="grid2">
+              <div class="card"><b>🧩 1. Simple and Clean Syntax</b><div class="s">Only <code class="in">32 keywords</code> and a small set of building blocks — functions, loops and decisions. English-like and easy to learn.</div></div>
+              <div class="card"><b>⚡ 2. Fast and Efficient</b><div class="s">Compiled straight to machine code with almost no runtime overhead. C programs are usually as fast as hand written assembly.</div></div>
+              <div class="card"><b>🎚️ 3. Middle-Level Language</b><div class="s">Supports high-level features (functions, arrays, structures) <em>and</em> low-level bit and byte manipulation through pointers and bitwise operators.</div></div>
+              <div class="card"><b>📦 4. Structured Language</b><div class="s">Code is broken into functions and blocks { }, making programs modular, readable and easy to debug. Supports top-down design.</div></div>
+              <div class="card"><b>🌍 5. Portable</b><div class="s">A program written on one machine runs on another with little or no change — just recompile. This is why UNIX spread everywhere: write once, compile anywhere.</div></div>
+              <div class="card"><b>📚 6. Rich Library</b><div class="s">Hundreds of ready-made functions in headers such as <code class="in">stdio.h</code>, <code class="in">math.h</code>, <code class="in">string.h</code> and <code class="in">stdlib.h</code>.</div></div>
+              <div class="card"><b>👉 7. Pointer and Memory Power</b><div class="s">Direct access to memory addresses using <code class="in">&amp;</code> and <code class="in">*</code>, plus dynamic allocation with <code class="in">malloc</code> — the heart of data structures.</div></div>
+              <div class="card"><b>🔁 8. Extensible</b><div class="s">You can create your own functions and whole libraries and reuse them anywhere. C also links easily with assembly code.</div></div>
+              <div class="card"><b>🧮 9. Rich Set of Operators</b><div class="s">Arithmetic, relational, logical, bitwise, assignment, increment and ternary operators let you write very compact expressions.</div></div>
+              <div class="card"><b>🏗️ 10. Foundation Language</b><div class="s">C++, Java, C#, JavaScript, Python, Go, Rust and PHP all borrowed syntax from C. Learn C once and you can read them all.</div></div>
+            </div>
+            <div class="note warn"><div class="nt">⚠️ Honest Limitations of C</div>C has <strong>no runtime checking</strong> (an out-of-range array index silently corrupts memory), <strong>no garbage collection</strong> (you must free what you malloc), <strong>no object oriented programming</strong> (no classes or inheritance) and <strong>no exception handling</strong> (no try/catch). These are exactly what C++ and Java added later.</div>
+            <h3 class="h3">Where is C actually used today?</h3>
+            <div class="chips">
+              <span class="chip">Operating systems (UNIX, Linux, Windows kernel)</span>
+              <span class="chip">Embedded systems and IoT</span>
+              <span class="chip">Device drivers</span>
+              <span class="chip">Databases (MySQL, PostgreSQL)</span>
+              <span class="chip">Compilers and interpreters</span>
+              <span class="chip">The Python interpreter (CPython)</span>
+              <span class="chip">Robotics and automotive</span>
+              <span class="chip">Game engines and graphics</span>
+            </div>
+          </section>
+
+          <!-- 1.4 -->
+          <section class="sec">
+            <h2 class="h2">1.4 How a C Program Actually Runs (Build Process)</h2>
+            <p class="p">This is the single most asked exam question from Unit 1. A plain <code class="in">.c</code> text file passes through <strong>six stages</strong> before you see output on the screen:</p>
+            <div class="pipeline" style="margin-top:12px">
+              <div class="pipe-item"><div class="pipe-rail"><div class="pipe-n" style="background:linear-gradient(135deg,#64748b,#334155)">1</div><div class="pipe-line"></div></div><div class="pipe-body"><span class="pipe-t">Source Code</span><span class="pipe-cmd">hello.c</span><div class="pipe-d">You write the program in an editor (VS Code, Turbo C, vi) and save it with the .c extension. This is plain text — the computer cannot run it yet.</div></div></div>
+              <div class="pipe-item"><div class="pipe-rail"><div class="pipe-n" style="background:linear-gradient(135deg,#ec4899,#e11d48)">2</div><div class="pipe-line"></div></div><div class="pipe-body"><span class="pipe-t">Preprocessor</span><span class="pipe-cmd">cpp hello.c</span><div class="pipe-d">Handles every line starting with #. It expands #include (pastes header file contents) and #define (replaces macros). Output: hello.i</div></div></div>
+              <div class="pipe-item"><div class="pipe-rail"><div class="pipe-n" style="background:linear-gradient(135deg,#f97316,#d97706)">3</div><div class="pipe-line"></div></div><div class="pipe-body"><span class="pipe-t">Compiler</span><span class="pipe-cmd">gcc -S</span><div class="pipe-d">Translates the expanded C source into assembly language for your CPU and reports all syntax errors here. Output: hello.s</div></div></div>
+              <div class="pipe-item"><div class="pipe-rail"><div class="pipe-n" style="background:linear-gradient(135deg,#f59e0b,#ca8a04)">4</div><div class="pipe-line"></div></div><div class="pipe-body"><span class="pipe-t">Assembler</span><span class="pipe-cmd">as hello.s</span><div class="pipe-d">Converts assembly into machine code (object code). Output: hello.o / hello.obj — binary, but still not executable on its own.</div></div></div>
+              <div class="pipe-item"><div class="pipe-rail"><div class="pipe-n" style="background:linear-gradient(135deg,#10b981,#0d9488)">5</div><div class="pipe-line"></div></div><div class="pipe-body"><span class="pipe-t">Linker</span><span class="pipe-cmd">ld</span><div class="pipe-d">Combines your object code with library object code (for example the real code of printf) and fixes all addresses. Output: a.out / hello.exe</div></div></div>
+              <div class="pipe-item"><div class="pipe-rail"><div class="pipe-n" style="background:linear-gradient(135deg,#06b6d4,#2563eb)">6</div></div><div class="pipe-body"><span class="pipe-t">Loader</span><span class="pipe-cmd">run</span><div class="pipe-d">When you run the program, the loader copies the executable into RAM, allocates memory for variables and hands control to main().</div></div></div>
+            </div>
+
+            <div class="grid2">
+              <div class="card">
+                <b>🖥️ Using GCC (Linux, Mac, Code::Blocks)</b>
+                <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">terminal</span></div><button class="copy-btn">Copy</button></div><pre>gcc hello.c -o hello    # compile + link
+./hello                  # run the program
+
+# to see each intermediate stage:
+gcc -E hello.c &gt; hello.i  # 1 preprocessed
+gcc -S hello.i            # 2 assembly
+gcc -c hello.s            # 3 object code
+gcc hello.o -o hello      # 4 link to executable</pre></div>
+              </div>
+              <div class="card">
+                <b>🪟 Using Turbo C (classic Windows lab setup)</b>
+                <ol class="nice">
+                  <li>Open Turbo C, then <strong>File → New</strong></li>
+                  <li>Type your program</li>
+                  <li><strong>File → Save as</strong> <code class="in">hello.c</code></li>
+                  <li><strong>Compile → Compile</strong> (Alt + F9) and check for errors</li>
+                  <li><strong>Run → Run</strong> (Ctrl + F9)</li>
+                  <li>See the output with <strong>Window → User Screen</strong> (Alt + F5)</li>
+                </ol>
+              </div>
+            </div>
+
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Stage</th><th>Input file</th><th>Output file</th><th>Tool used</th></tr></thead>
+              <tbody>
+                <tr><td>Preprocessing</td><td><code class="in">hello.c</code></td><td><code class="in">hello.i</code></td><td>Preprocessor (cpp)</td></tr>
+                <tr><td>Compilation</td><td><code class="in">hello.i</code></td><td><code class="in">hello.s</code></td><td>C compiler (gcc)</td></tr>
+                <tr><td>Assembly</td><td><code class="in">hello.s</code></td><td><code class="in">hello.o</code></td><td>Assembler (as)</td></tr>
+                <tr><td>Linking</td><td><code class="in">hello.o + libraries</code></td><td><code class="in">hello.exe</code></td><td>Linker (ld)</td></tr>
+                <tr><td>Loading</td><td><code class="in">hello.exe</code></td><td>Process in RAM</td><td>Loader (OS)</td></tr>
+              </tbody>
+            </table></div>
+          </section>
+
+          <!-- 1.5 -->
+          <section class="sec">
+            <h2 class="h2">1.5 Structure of a C Program</h2>
+            <p class="p">Every complete C program is built from up to <strong>six sections</strong>. Only the <code class="in">main()</code> function section is compulsory — the rest are optional, but every professional program uses them all.</p>
+            <div class="grid4">
+              <div class="card"><b><span style="background:linear-gradient(135deg,#64748b,#334155);color:#fff;border-radius:9px;padding:4px 10px;font-size:12px">1</span> Documentation</b><div class="s">Name, author, date, purpose — as comments.</div></div>
+              <div class="card"><b><span style="background:linear-gradient(135deg,#22d3ee,#0891b2);color:#fff;border-radius:9px;padding:4px 10px;font-size:12px">2</span> Link</b><div class="s"><code class="in">#include</code> header and library files.</div></div>
+              <div class="card"><b><span style="background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;border-radius:9px;padding:4px 10px;font-size:12px">3</span> Definition</b><div class="s"><code class="in">#define</code> symbolic constants and macros.</div></div>
+              <div class="card"><b><span style="background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;border-radius:9px;padding:4px 10px;font-size:12px">4</span> Global Declaration</b><div class="s">Variables and prototypes usable everywhere.</div></div>
+              <div class="card"><b><span style="background:linear-gradient(135deg,#e879f9,#db2777);color:#fff;border-radius:9px;padding:4px 10px;font-size:12px">5</span> main()</b><div class="s">Compulsory entry point — declaration part + executable part.</div></div>
+              <div class="card"><b><span style="background:linear-gradient(135deg,#fbbf24,#ea580c);color:#fff;border-radius:9px;padding:4px 10px;font-size:12px">6</span> Sub Programs</b><div class="s">User-defined functions, called from main().</div></div>
+            </div>
+
+            <h3 class="h3">A program showing ALL six sections</h3>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">structure_demo.c</span></div><button class="copy-btn">Copy</button></div><pre>/* =============================================
+   1. DOCUMENTATION SECTION
+   Program : structure_demo.c
+   Purpose : Shows all 6 sections of a C program
+   ============================================= */
+
+/* 2. LINK SECTION - connect the standard libraries */
+#include &lt;stdio.h&gt;
+
+/* 3. DEFINITION SECTION - symbolic constants */
+#define PI 3.14159
+#define MAX 100
+
+/* 4. GLOBAL DECLARATION SECTION */
+float area;                 /* global variable      */
+int square(int n);          /* function prototype   */
+
+/* 5. main() FUNCTION - execution starts here */
+int main()
+{
+    /* 5a. declaration part */
+    int r = 5, result;
+
+    /* 5b. executable part */
+    area = PI * r * r;
+    result = square(r);
+
+    printf("Area of circle = %.2f\n", area);
+    printf("Square of %d = %d\n", r, result);
+
+    return 0;      /* 0 means success */
+}
+
+/* 6. SUB PROGRAM SECTION - user-defined functions */
+int square(int n)
+{
+    return (n * n);
+}</pre><div class="out"><div class="ol">▸ Output</div><pre>Area of circle = 78.54
+Square of 5 = 25</pre></div></div>
+
+            <div class="dl">
+              <div class="dl-row"><dt>1. Documentation Section</dt><dd>A set of <strong>comments</strong> describing the program name, author, date and purpose, written between <code class="in">/* ... */</code>. Completely ignored by the compiler — meant only for humans.</dd></div>
+              <div class="dl-row"><dt>2. Link Section</dt><dd>Instructs the preprocessor to include header files that give access to library functions. You cannot use <code class="in">printf()</code> without <code class="in">#include &lt;stdio.h&gt;</code>. These directives take <strong>no semicolon</strong>.</dd></div>
+              <div class="dl-row"><dt>3. Definition Section</dt><dd>Defines symbolic constants using <code class="in">#define</code>. They are replaced by the preprocessor <em>before</em> compilation, so they use no memory and can never change at run time.</dd></div>
+              <div class="dl-row"><dt>4. Global Declaration</dt><dd>Variables and function prototypes declared outside every function. A global variable can be used by <strong>every</strong> function in the file from that point on.</dd></div>
+              <div class="dl-row"><dt>5. main() Function</dt><dd>The <strong>compulsory</strong> section and the entry point of every C program. Split into a <em>declaration part</em> (variables first, the old C89 rule) and an <em>executable part</em> (the statements).</dd></div>
+              <div class="dl-row"><dt>6. Sub Program Section</dt><dd>All user-defined functions, also called subroutines or modules. They are prototyped in section 4, defined here and <em>called</em> from main(). This is what makes C modular.</dd></div>
+            </div>
+
+            <div class="note tip"><div class="nt">✨ The Two Golden Rules of main()</div>1. Every C program must have <strong>exactly one</strong> <code class="in">main()</code> — more than one, or none at all, is a compile error.<br>2. Execution <strong>always begins</strong> at the first statement of <code class="in">main()</code> and ends when <code class="in">main()</code> returns, no matter how many other functions exist.</div>
+          </section>
+
+          <!-- 1.6 -->
+          <section class="sec">
+            <h2 class="h2">1.6 Your First Program — Line by Line</h2>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">hello.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+
+int main()
+{
+    printf("Hello, World!\n");
+    return 0;
+}</pre><div class="out"><div class="ol">▸ Output</div><pre>Hello, World!</pre></div></div>
+            <p class="p">Only six lines, but each one does something essential. <strong>Tap any line below:</strong></p>
+            <div id="explorer"></div>
+
+            <h3 class="h3">Two more beginner programs</h3>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">sum.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+
+int main()
+{
+    int a, b, sum;              /* declaration part */
+
+    printf("Enter two numbers: ");
+    scanf("%d %d", &amp;a, &amp;b);     /* &amp; means address of */
+
+    sum = a + b;                /* executable part */
+    printf("Sum = %d\n", sum);
+
+    return 0;
+}</pre><div class="out"><div class="ol">▸ Output</div><pre>Enter two numbers: 12 8
+Sum = 20</pre></div></div>
+
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">area.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+#define PI 3.14159          /* definition section */
+
+int main()
+{
+    float radius = 5.0f;
+    float area, circ;
+
+    area = PI * radius * radius;
+    circ = 2 * PI * radius;
+
+    printf("Radius        = %.0f\n", radius);
+    printf("Area          = %f\n", area);
+    printf("Circumference = %f\n", circ);
+
+    return 0;
+}</pre><div class="out"><div class="ol">▸ Output</div><pre>Radius        = 5
+Area          = 78.539749
+Circumference = 31.415899</pre></div></div>
+          </section>
+
+          <!-- 1.7 -->
+          <section class="sec">
+            <h2 class="h2">1.7 C Programming Conventions</h2>
+            <p class="p"><strong>Conventions</strong> are not compiler rules — a messy program still compiles. They are professional habits that make code <em>readable, consistent and maintainable</em>, and in exams neat formatting earns marks.</p>
+
+            <h3 class="h3">A. Naming Conventions</h3>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Entity</th><th>Convention</th><th>Example</th></tr></thead>
+              <tbody>
+                <tr><td>Variable</td><td>lowercase or camelCase, meaningful</td><td><code class="in">studentAge, totalMarks</code></td></tr>
+                <tr><td>Function</td><td>lowercase, verb based</td><td><code class="in">calculateArea(), printList()</code></td></tr>
+                <tr><td>Symbolic constant</td><td>ALL UPPER_CASE with underscores</td><td><code class="in">MAX_SIZE, PI, TAX_RATE</code></td></tr>
+                <tr><td>Loop counter</td><td>single letters i, j, k</td><td><code class="in">for (i = 0; ...)</code></td></tr>
+                <tr><td>Pointer</td><td>p prefix or Ptr suffix</td><td><code class="in">pName, countPtr</code></td></tr>
+                <tr><td>Header file</td><td>lowercase name with .h</td><td><code class="in">stdio.h, myutils.h</code></td></tr>
+              </tbody>
+            </table></div>
+
+            <h3 class="h3">B. Formatting Conventions</h3>
+            <div class="dodont">
+              <div class="do-box"><h4>✅ Always Do This</h4><ul>
+                <li>Indent the body of every { } block by 4 spaces</li>
+                <li>Write one statement per line</li>
+                <li>Put spaces around operators: <code class="in">a = b + c</code></li>
+                <li>Add a blank line between logical sections</li>
+                <li>Comment above every function using <code class="in">/* */</code></li>
+                <li>Keep lines under about 80 characters</li>
+                <li>Align opening and closing braces consistently</li>
+              </ul></div>
+              <div class="dont-box"><h4>❌ Never Do This</h4><ul>
+                <li>Do not use a keyword as a name (<del>int float;</del>)</li>
+                <li>Do not start a name with a digit (<del>2total</del>)</li>
+                <li>No spaces or symbols in names (<del>roll no</del>, <del>my-id</del>)</li>
+                <li>No meaningless names (<del>aaa</del>, <del>x1x2</del>)</li>
+                <li>Do not mix styles (<del>RollNo</del> and <del>rollno</del>)</li>
+                <li>No semicolon after <code class="in">#include</code> or <code class="in">#define</code></li>
+                <li>Do not squeeze everything onto one line</li>
+              </ul></div>
+            </div>
+
+            <h3 class="h3">C. See the Difference</h3>
+            <div class="grid2">
+              <div>
+                <div style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#f87171;margin-bottom:6px">✗ Bad style — compiles, but unreadable</div>
+                <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i></div><button class="copy-btn">Copy</button></div><pre>int main(){int a=5,b=10,c;c=a+b;printf("%d",c);return 0;}</pre></div>
+              </div>
+              <div>
+                <div style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#34d399;margin-bottom:6px">✓ Good style — the same program, professionally written</div>
+                <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i></div><button class="copy-btn">Copy</button></div><pre>/* Program : add.c  -  adds two numbers */
+#include &lt;stdio.h&gt;
+
+int main()
+{
+    int first  = 5;
+    int second = 10;
+    int sum;
+
+    sum = first + second;
+
+    printf("Sum = %d\n", sum);
+
+    return 0;
+}</pre></div>
+              </div>
+            </div>
+
+            <div class="note exam"><div class="nt">🎓 Why conventions matter (2-mark answer)</div>Conventions improve <strong>readability</strong>, make debugging easier, let <strong>team members</strong> understand each other's code, reduce careless mistakes and give software a consistent professional look — all without changing how the program runs.</div>
+          </section>
+
+          <!-- 1.8 -->
+          <section class="sec">
+            <h2 class="h2">1.8 The C Character Set</h2>
+            <p class="p">The <strong>character set</strong> is the set of all letters, digits and symbols the C compiler can recognise. Anything typed outside this set (except inside a comment or a string) produces an error. C uses the <strong>ASCII</strong> coding scheme, so every character has a numeric code from 0 to 255.</p>
+            <div class="grid4">
+              <div class="card"><b>A Alphabets</b><div class="mono">A B C ... X Y Z<br>a b c ... x y z</div><div class="s">52 characters. C is case sensitive: A (65) and a (97) are different.</div></div>
+              <div class="card"><b>0 Digits</b><div class="mono">0 1 2 3 4 5 6 7 8 9</div><div class="s">10 characters, used to build numeric constants of any size.</div></div>
+              <div class="card"><b># Special Symbols</b><div class="mono">~ ! @ # $ % ^ &amp; * ( ) _ - + =<br>{ } [ ] | \ : ; " ' &lt; &gt; , . ? /</div><div class="s">29 characters. Most work as operators or punctuation.</div></div>
+              <div class="card"><b>␣ White Spaces</b><div class="mono">blank space, tab,<br>newline, form feed</div><div class="s">They separate tokens and are ignored outside strings.</div></div>
+            </div>
+            <div class="note info"><div class="nt">💡 Total = 52 + 10 + 29 = 95 printable characters</div>Together with the white-space characters, these form the complete C character set, based on ASCII — the American Standard Code for Information Interchange.</div>
+
+            <h3 class="h3">Sample ASCII codes worth remembering</h3>
+            <div class="asc-grid">
+              <div class="asc"><div class="c1">'A'</div><div class="c2">65</div></div>
+              <div class="asc"><div class="c1">'Z'</div><div class="c2">90</div></div>
+              <div class="asc"><div class="c1">'a'</div><div class="c2">97</div></div>
+              <div class="asc"><div class="c1">'z'</div><div class="c2">122</div></div>
+              <div class="asc"><div class="c1">'0'</div><div class="c2">48</div></div>
+              <div class="asc"><div class="c1">'9'</div><div class="c2">57</div></div>
+              <div class="asc"><div class="c1">' '</div><div class="c2">32</div></div>
+              <div class="asc"><div class="c1">'\n'</div><div class="c2">10</div></div>
+              <div class="asc"><div class="c1">'\0'</div><div class="c2">0</div></div>
+              <div class="asc"><div class="c1">'+'</div><div class="c2">43</div></div>
+              <div class="asc"><div class="c1">'='</div><div class="c2">61</div></div>
+              <div class="asc"><div class="c1">'?'</div><div class="c2">63</div></div>
+            </div>
+            <p class="p">Useful tricks: convert a digit character to its integer value with <code class="in">ch - '0'</code>, and convert an uppercase letter to lowercase with <code class="in">ch + 32</code>, because <code class="in">'a' - 'A' == 32</code>.</p>
+
+            <h3 class="h3">Escape Sequences (non-printable characters)</h3>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Sequence</th><th>Name</th><th>ASCII</th><th>What it does</th></tr></thead>
+              <tbody>
+                <tr><td><code class="in">\n</code></td><td>Newline / line feed</td><td>10</td><td>Moves the cursor to the next line</td></tr>
+                <tr><td><code class="in">\t</code></td><td>Horizontal tab</td><td>9</td><td>Inserts a tab space</td></tr>
+                <tr><td><code class="in">\r</code></td><td>Carriage return</td><td>13</td><td>Returns to the start of the line</td></tr>
+                <tr><td><code class="in">\b</code></td><td>Backspace</td><td>8</td><td>Deletes the previous character</td></tr>
+                <tr><td><code class="in">\0</code></td><td>Null character</td><td>0</td><td>Marks the end of a string</td></tr>
+                <tr><td><code class="in">\\</code></td><td>Backslash</td><td>92</td><td>Prints one backslash</td></tr>
+                <tr><td><code class="in">\'</code></td><td>Single quote</td><td>39</td><td>Prints an apostrophe</td></tr>
+                <tr><td><code class="in">\"</code></td><td>Double quote</td><td>34</td><td>Prints quotation marks</td></tr>
+                <tr><td><code class="in">\a</code></td><td>Alert / bell</td><td>7</td><td>Beeps the speaker</td></tr>
+              </tbody>
+            </table></div>
+          </section>
+
+          <!-- 1.9 -->
+          <section class="sec">
+            <h2 class="h2">1.9 Tokens — the Smallest Units of C</h2>
+            <p class="p">A <strong>token</strong> is the smallest individual unit of a C program that the compiler recognises. The compiler's very first job, called lexical analysis, is to break your source code into a stream of tokens. C has <strong>six</strong> kinds:</p>
+            <div class="grid3">
+              <div class="card"><b>1. Keywords</b><div class="s">32 reserved words with a fixed meaning</div><div class="mono">int, float, if, else, for, while, return</div></div>
+              <div class="card"><b>2. Identifiers</b><div class="s">Names invented by the programmer</div><div class="mono">sum, roll_no, calculateArea</div></div>
+              <div class="card"><b>3. Constants</b><div class="s">Fixed values that never change</div><div class="mono">100, 3.14, 'A', "Hello"</div></div>
+              <div class="card"><b>4. Strings</b><div class="s">A sequence of characters in quotes</div><div class="mono">"C Programming"</div></div>
+              <div class="card"><b>5. Operators</b><div class="s">Symbols that perform operations</div><div class="mono">+ - * / % = == &lt; &amp;&amp;</div></div>
+              <div class="card"><b>6. Special Symbols</b><div class="s">Punctuation and grouping symbols</div><div class="mono"># [ ] { } ( ) , ; -&gt;</div></div>
+            </div>
+
+            <h3 class="h3">Example — counting the tokens in one line</h3>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i></div><button class="copy-btn">Copy</button></div><pre>total = price + quantity * 0.18;</pre></div>
+            <div class="tok-row">
+              <span class="tok"><b>total</b><span>identifier</span></span>
+              <span class="tok"><b>=</b><span>operator</span></span>
+              <span class="tok"><b>price</b><span>identifier</span></span>
+              <span class="tok"><b>+</b><span>operator</span></span>
+              <span class="tok"><b>quantity</b><span>identifier</span></span>
+              <span class="tok"><b>*</b><span>operator</span></span>
+              <span class="tok"><b>0.18</b><span>constant</span></span>
+              <span class="tok"><b>;</b><span>special symbol</span></span>
+            </div>
+            <p class="p">Eight tokens in total. The spaces between them are plain <strong>white space</strong> and are thrown away by the compiler.</p>
+
+            <div class="note tip"><div class="nt">✨ Coming up in Chapter 2</div>Keywords, identifiers, data types, modifiers, variables and constants are each explained in full detail — with all 32 keywords, size tables and valid/invalid examples — in the next chapter.</div>
+          </section>
+
+          <!-- 1.10 -->
+          <section class="sec">
+            <h2 class="h2">1.10 Types of Errors in C</h2>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Error</th><th>When detected</th><th>Example</th><th>Does it run?</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Syntax error</strong></td><td>At compile time</td><td><code class="in">printf("Hi")</code> with no ;</td><td>No — will not compile</td></tr>
+                <tr><td><strong>Semantic error</strong></td><td>At compile time</td><td><code class="in">int a = "hello";</code></td><td>No — the meaning is wrong</td></tr>
+                <tr><td><strong>Runtime error</strong></td><td>While executing</td><td><code class="in">c = a / 0;</code></td><td>Starts, then crashes</td></tr>
+                <tr><td><strong>Logical error</strong></td><td>Never — output is wrong</td><td><code class="in">avg = a + b / 2;</code></td><td>Yes — but the answer is wrong</td></tr>
+                <tr><td><strong>Linker error</strong></td><td>At link time</td><td>Calling a function that was never defined</td><td>No — no executable produced</td></tr>
+              </tbody>
+            </table></div>
+            <h3 class="h3">The 10 most common beginner mistakes</h3>
+            <ol class="nice">
+              <li>Forgetting the semicolon <code class="in">;</code> at the end of a statement</li>
+              <li>Using <code class="in">=</code> instead of <code class="in">==</code> inside an <code class="in">if</code></li>
+              <li>Missing the <code class="in">&amp;</code> in scanf, as in <code class="in">scanf("%d", a)</code></li>
+              <li>Unbalanced braces { } or parentheses</li>
+              <li>Writing a capital <code class="in">Printf()</code> — C is case sensitive</li>
+              <li>Forgetting <code class="in">#include &lt;stdio.h&gt;</code> before using printf</li>
+              <li>Putting a semicolon after <code class="in">#include</code> or <code class="in">#define</code></li>
+              <li>Integer division: <code class="in">5 / 2</code> gives <code class="in">2</code>, not <code class="in">2.5</code></li>
+              <li>Using a variable before declaring it</li>
+              <li>Comparing two strings with <code class="in">==</code> instead of <code class="in">strcmp()</code></li>
+            </ol>
+          </section>
+
+          <!-- Summary -->
+          <div class="summ">
+            <h3>📝 Chapter 1 — Complete Revision Notes</h3>
+            <div class="pt"><b>History:</b> ALGOL (1960) → CPL → BCPL (1967) → B (1970) → <strong>C (1972, Dennis Ritchie, Bell Labs)</strong> → K&amp;R book (1978) → ANSI C / C89 (1989) → C99 → C11 → C17. Built to rewrite UNIX on the PDP-11.</div>
+            <div class="pt"><b>Features:</b> Simple, fast, portable, structured, middle-level, rich library, pointer and memory control, rich operators, extensible, and the foundation for C++, Java and Python.</div>
+            <div class="pt"><b>Build process:</b> Source <code class="in">.c</code> → Preprocessor <code class="in">.i</code> → Compiler <code class="in">.s</code> → Assembler <code class="in">.o</code> → Linker <code class="in">.exe</code> → Loader → execution starting at <code class="in">main()</code>.</div>
+            <div class="pt"><b>Structure (6 sections):</b> Documentation → Link (<code class="in">#include</code>) → Definition (<code class="in">#define</code>) → Global declaration → <code class="in">main()</code> with declaration + executable parts → Sub programs.</div>
+            <div class="pt"><b>Conventions:</b> lowercase camelCase variables, UPPER_CASE constants, verb based function names, 4-space indentation, meaningful names, comments and one statement per line.</div>
+            <div class="pt"><b>Character set:</b> 52 alphabets + 10 digits + 29 special symbols plus white space = 95 printable ASCII characters. Escape sequences like <code class="in">\n</code>, <code class="in">\t</code>, <code class="in">\0</code> stand for non-printable characters.</div>
+            <div class="pt"><b>Tokens (6 kinds):</b> Keywords, identifiers, constants, strings, operators and special symbols.</div>
+          </div>
+
+          <!-- Exam Q&A -->
+          <div class="qa">
+            <h3>🎓 Important Exam Questions (tap to reveal answers)</h3>
+            <details><summary>1. Who developed the C language, when and where, and why was it created?</summary><div class="a">C was developed by <strong>Dennis M. Ritchie</strong> in <strong>1972</strong> at <strong>Bell Telephone Laboratories</strong>, Murray Hill, New Jersey, USA. He created it to rewrite the <strong>UNIX operating system</strong> in a high-level language so the OS could be ported to different computers instead of being rewritten in assembly every time.</div></details>
+            <details><summary>2. Explain the evolution of C from ALGOL to ANSI C.</summary><div class="a">ALGOL (1960, international committee) was structured but too abstract → CPL (1963, Cambridge and London) → BCPL (1967, Martin Richards) was small and typeless → B (1970, Ken Thompson) adapted BCPL for UNIX on the PDP-7 → <strong>C (1972, Ritchie)</strong> added data types, arrays, structures and pointers. Kernighan and Ritchie documented it in 1978, and ANSI standardised it as C89 in 1989 (ISO C90), followed by C99, C11 and C17.</div></details>
+            <details><summary>3. Draw and explain the structure of a C program.</summary><div class="a">A C program has six sections: (1) <strong>Documentation</strong> — comments; (2) <strong>Link</strong> — <code class="in">#include</code> header files; (3) <strong>Definition</strong> — <code class="in">#define</code> constants; (4) <strong>Global declaration</strong> — global variables and function prototypes; (5) <strong>main()</strong> — the compulsory entry point containing a declaration part followed by an executable part; (6) <strong>Sub programs</strong> — user-defined functions. Execution always begins at the first statement of main().</div></details>
+            <details><summary>4. Explain the various stages in the execution of a C program.</summary><div class="a">(i) <strong>Editing</strong> — writing the source in a .c file; (ii) <strong>Preprocessing</strong> — expanding #include and #define to produce a .i file; (iii) <strong>Compilation</strong> — converting to assembly (.s) and reporting syntax errors; (iv) <strong>Assembly</strong> — producing object code (.o); (v) <strong>Linking</strong> — joining our object code with library code to build the executable; (vi) <strong>Loading</strong> — the loader places the program in memory and execution starts at main().</div></details>
+            <details><summary>5. Why is C called a middle-level language?</summary><div class="a">Because it combines the features of high-level languages — English-like syntax, functions, structures and portability — with the features of low-level languages — bitwise operators, pointer arithmetic, direct memory access and the ability to write system software such as OS kernels and device drivers. It is therefore neither purely high-level nor purely low-level.</div></details>
+            <details><summary>6. List the character set of C with the count of each group.</summary><div class="a">(a) <strong>Alphabets</strong> — 52 characters (A-Z and a-z); (b) <strong>Digits</strong> — 10 characters (0-9); (c) <strong>Special symbols</strong> — 29 characters; plus <strong>white-space characters</strong> such as space, tab, newline and carriage return. The total of printable characters is 95, all based on ASCII.</div></details>
+            <details><summary>7. What are the six types of tokens in C? Give two examples of each.</summary><div class="a">(1) <strong>Keywords</strong> — int, while; (2) <strong>Identifiers</strong> — marks, total_sum; (3) <strong>Constants</strong> — 100 and the character A; (4) <strong>Strings</strong> — quoted text; (5) <strong>Operators</strong> — plus and logical AND; (6) <strong>Special symbols</strong> — semicolon and braces.</div></details>
+            <details><summary>8. Differentiate between a syntax error, a runtime error and a logical error.</summary><div class="a">A <strong>syntax error</strong> breaks the grammar rules of C and is caught by the compiler, so the program never compiles — for example a missing semicolon. A <strong>runtime error</strong> appears while the program is running and usually crashes it, such as dividing by zero. A <strong>logical error</strong> is a mistake in the algorithm — the program compiles and runs but produces the wrong output, and only testing can reveal it.</div></details>
+          </div>
+
+          <!-- Quiz -->
+          <div class="quiz-box" id="quizBox">
+            <h3>🧠 Test Yourself <span id="scoreTag" style="display:none"></span></h3>
+            <div id="quizList"></div>
+            <div class="quiz-actions" id="quizActions"></div>
+          </div>
+
+          <!-- Practice -->
+          <div class="practice">
+            <h3>🏋️ Practice Task</h3>
+            <p class="p">Write a program <code class="in">profile.c</code> containing all six sections, which prints your <strong>name, roll number, branch and city</strong> on separate lines using a single <code class="in">printf()</code> with escape sequences, and uses one <code class="in">#define</code> constant for your roll number.</p>
+            <details><summary>👀 Show model answer</summary><div class="a">
+              <div class="code" style="margin:6px 0 0"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">profile.c</span></div><button class="copy-btn">Copy</button></div><pre>/* profile.c  -  Author : Aarav Sharma */
+#include &lt;stdio.h&gt;
+
+#define ROLL "23CS1042"      /* definition section */
+
+int main()
+{
+    char name[]   = "Aarav Sharma";
+    char branch[] = "Computer Science";
+    char city[]   = "Jaipur";
+
+    printf("Name   : %s\nRoll   : %s\n", name, ROLL);
+    printf("Branch : %s\nCity   : %s\n", branch, city);
+
+    return 0;
+}</pre><div class="out"><div class="ol">▸ Output</div><pre>Name   : Aarav Sharma
+Roll   : 23CS1042
+Branch : Computer Science
+City   : Jaipur</pre></div></div>
+            </div></details>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             CHAPTER 2 — CORE
+        ============================================================ -->
+        <section class="chapter" id="ch2">
+          <div class="hero">
+            <div class="pills"><span class="pill blue">Chapter 2</span><span class="muted">Core concepts</span></div>
+            <h1 class="h1">Identifiers, Keywords, Data Types &amp; Variables</h1>
+            <p class="p">How to name things in C, the reserved words you cannot use, how data is stored, and how to declare variables and constants.</p>
+          </div>
+
+          <section class="sec">
+            <h2 class="h2">2.1 Identifiers</h2>
+            <p class="p">An <strong>identifier</strong> is a name given to a variable, function, array or any user-defined entity in a C program.</p>
+            <h3 class="h3">Rules for Naming Identifiers</h3>
+            <ul class="nice">
+              <li>Must begin with a <strong>letter (A-Z, a-z)</strong> or <strong>underscore (_)</strong>.</li>
+              <li>After the first character it may contain <strong>letters, digits or underscores</strong>.</li>
+              <li><strong>Cannot</strong> start with a digit, contain spaces or special characters (except _), or be a keyword.</li>
+              <li>C is <strong>case-sensitive</strong>: <code class="in">Age</code>, <code class="in">age</code> and <code class="in">AGE</code> are three different identifiers.</li>
+            </ul>
+            <div class="dodont">
+              <div class="do-box"><h4>✅ Valid Identifiers</h4><ul>
+                <li><code class="in">age</code>, <code class="in">_count</code>, <code class="in">student_name</code></li>
+                <li><code class="in">rollNo123</code>, <code class="in">MAX_SIZE</code>, <code class="in">temp99</code></li>
+              </ul></div>
+              <div class="dont-box"><h4>❌ Invalid Identifiers</h4><ul>
+                <li><del>2ndValue</del> (starts with digit), <del>user@name</del> (special char)</li>
+                <li><del>total sum</del> (has space), <del>float</del> (keyword), <del>my-name</del></li>
+              </ul></div>
+            </div>
+          </section>
+
+          <section class="sec">
+            <h2 class="h2">2.2 Keywords</h2>
+            <p class="p"><strong>Keywords</strong> are reserved words with a predefined meaning to the C compiler. They <strong>cannot</strong> be used as identifiers. C has <strong>32 keywords</strong>, all written in lowercase.</p>
+            <div class="kw-grid">
+              <div class="kw">auto</div><div class="kw">break</div><div class="kw">case</div><div class="kw">char</div><div class="kw">const</div><div class="kw">continue</div>
+              <div class="kw">default</div><div class="kw">do</div><div class="kw">double</div><div class="kw">else</div><div class="kw">enum</div><div class="kw">extern</div>
+              <div class="kw">float</div><div class="kw">for</div><div class="kw">goto</div><div class="kw">if</div><div class="kw">int</div><div class="kw">long</div>
+              <div class="kw">register</div><div class="kw">return</div><div class="kw">short</div><div class="kw">signed</div><div class="kw">sizeof</div><div class="kw">static</div>
+              <div class="kw">struct</div><div class="kw">switch</div><div class="kw">typedef</div><div class="kw">union</div><div class="kw">unsigned</div><div class="kw">void</div>
+              <div class="kw">volatile</div><div class="kw">while</div>
+            </div>
+            <div class="note warn"><div class="nt">⚠️ Important</div>Never use a keyword as a variable or function name. For example, <code class="in">int float = 5;</code> is a compilation error because <code class="in">float</code> is a keyword.</div>
+          </section>
+
+          <section class="sec">
+            <h2 class="h2">2.3 Simple Data Types</h2>
+            <p class="p">A <strong>data type</strong> specifies the kind of data a variable can hold. It decides the amount of memory allocated and the range of values stored.</p>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Data Type</th><th>Size</th><th>Format</th><th>Range</th></tr></thead>
+              <tbody>
+                <tr><td><code class="in">char</code></td><td>1 byte</td><td>%c</td><td>-128 to 127</td></tr>
+                <tr><td><code class="in">int</code></td><td>2 or 4 bytes</td><td>%d</td><td>-32,768 to 32,767 (if 2 bytes)</td></tr>
+                <tr><td><code class="in">float</code></td><td>4 bytes</td><td>%f</td><td>±3.4e-38 to ±3.4e+38</td></tr>
+                <tr><td><code class="in">double</code></td><td>8 bytes</td><td>%lf</td><td>±1.7e-308 to ±1.7e+308</td></tr>
+                <tr><td><code class="in">void</code></td><td>0 bytes</td><td>—</td><td>No value (used with functions)</td></tr>
+              </tbody>
+            </table></div>
+            <h3 class="h3">Modifiers</h3>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Modifier</th><th>Effect</th></tr></thead>
+              <tbody>
+                <tr><td><code class="in">signed</code></td><td>Allows positive and negative values (default)</td></tr>
+                <tr><td><code class="in">unsigned</code></td><td>Only positive values (doubles the positive range)</td></tr>
+                <tr><td><code class="in">short</code></td><td>Reduces the size (usually by half)</td></tr>
+                <tr><td><code class="in">long</code></td><td>Increases the size (usually double)</td></tr>
+              </tbody>
+            </table></div>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">datatypes.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+
+int main()
+{
+    char  grade  = 'A';
+    int   age    = 20;
+    float height = 5.9f;
+    double pi    = 3.14159265358979;
+
+    printf("Grade  : %c\n", grade);
+    printf("Age    : %d\n", age);
+    printf("Height : %.2f\n", height);
+    printf("Pi     : %.10lf\n", pi);
+
+    printf("Size of int = %lu bytes\n", sizeof(int));
+    return 0;
+}</pre></div>
+          </section>
+
+          <section class="sec">
+            <h2 class="h2">2.4 Variables &amp; Constants</h2>
+            <p class="p">A <strong>variable</strong> is a named memory location whose value can change during execution. Every variable must be <strong>declared</strong> before use: <code class="in">data_type name = value;</code></p>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i></div><button class="copy-btn">Copy</button></div><pre>int    count = 10;          // declaration + initialization
+float  price;               // declaration only
+price = 99.50;              // assignment
+char   grade = 'A';</pre></div>
+            <p class="p">A <strong>constant</strong> is a fixed value that never changes. Two ways to define one:</p>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i></div><button class="copy-btn">Copy</button></div><pre>#define PI 3.14159          // preprocessor - no semicolon!
+const int MAX = 100;        // const keyword
+
+// MAX = 200;               // ERROR: read-only variable</pre></div>
+          </section>
+
+          <div class="summ">
+            <h3>📝 Chapter 2 Summary</h3>
+            <div class="pt"><b>Identifiers:</b> start with a letter or _, no keywords, no spaces, case-sensitive.</div>
+            <div class="pt"><b>Keywords:</b> 32 reserved words, always lowercase, never usable as names.</div>
+            <div class="pt"><b>Data types:</b> char, int, float, double, void — modified by signed, unsigned, short, long.</div>
+            <div class="pt"><b>Variables:</b> declared as <code class="in">type name;</code> — memory locations whose value can change.</div>
+            <div class="pt"><b>Constants:</b> fixed values via <code class="in">#define</code> or <code class="in">const</code>.</div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             CHAPTER 3 — CORE
+        ============================================================ -->
+        <section class="chapter" id="ch3">
+          <div class="hero">
+            <div class="pills"><span class="pill violet">Chapter 3</span><span class="muted">Core concepts</span></div>
+            <h1 class="h1">Operators &amp; Operator Precedence</h1>
+            <p class="p">Operators are the building blocks of expressions. Learn every operator in C and the order in which they are evaluated.</p>
+          </div>
+
+          <section class="sec">
+            <h2 class="h2">3.1 Arithmetic &amp; Assignment Operators</h2>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Operator</th><th>Meaning</th><th>Example</th><th>Result</th></tr></thead>
+              <tbody>
+                <tr><td><code class="in">+</code></td><td>Addition</td><td>a + b</td><td>10 + 3 = 13</td></tr>
+                <tr><td><code class="in">-</code></td><td>Subtraction</td><td>a - b</td><td>10 - 3 = 7</td></tr>
+                <tr><td><code class="in">*</code></td><td>Multiplication</td><td>a * b</td><td>10 * 3 = 30</td></tr>
+                <tr><td><code class="in">/</code></td><td>Division</td><td>a / b</td><td>10 / 3 = 3 (integer)</td></tr>
+                <tr><td><code class="in">%</code></td><td>Modulus (remainder)</td><td>a % b</td><td>10 % 3 = 1</td></tr>
+              </tbody>
+            </table></div>
+            <div class="note warn"><div class="nt">⚠️ About / and %</div><code class="in">/</code> on integers truncates the decimal part (10/3 = 3). Use <code class="in">10.0 / 3</code> to get 3.33. <code class="in">%</code> works only with integers.</div>
+            <h3 class="h3">Compound Assignment &amp; Increment</h3>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Shorthand</th><th>Equivalent</th><th>Type</th></tr></thead>
+              <tbody>
+                <tr><td><code class="in">a += 3</code></td><td>a = a + 3</td><td>Compound assignment</td></tr>
+                <tr><td><code class="in">a -= 3</code></td><td>a = a - 3</td><td>Compound assignment</td></tr>
+                <tr><td><code class="in">a *= 3</code></td><td>a = a * 3</td><td>Compound assignment</td></tr>
+                <tr><td><code class="in">++a</code></td><td>a = a + 1, then use</td><td>Pre-increment</td></tr>
+                <tr><td><code class="in">a++</code></td><td>use, then a = a + 1</td><td>Post-increment</td></tr>
+              </tbody>
+            </table></div>
+          </section>
+
+          <section class="sec">
+            <h2 class="h2">3.2 Relational, Logical &amp; Conditional</h2>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Relational</th><th>Meaning</th><th>Logical</th><th>Meaning</th></tr></thead>
+              <tbody>
+                <tr><td><code class="in">==</code></td><td>Equal to</td><td><code class="in">&amp;&amp;</code></td><td>Logical AND</td></tr>
+                <tr><td><code class="in">!=</code></td><td>Not equal</td><td><code class="in">||</code></td><td>Logical OR</td></tr>
+                <tr><td><code class="in">&gt;</code> <code class="in">&lt;</code></td><td>Greater / less</td><td><code class="in">!</code></td><td>Logical NOT</td></tr>
+                <tr><td><code class="in">&gt;=</code> <code class="in">&lt;=</code></td><td>Greater/less or equal</td><td><code class="in">? :</code></td><td>Ternary: cond ? A : B</td></tr>
+              </tbody>
+            </table></div>
+            <p class="p">Relational and logical operators always return <strong>1</strong> (true) or <strong>0</strong> (false). Example: <code class="in">int max = (a &gt; b) ? a : b;</code></p>
+          </section>
+
+          <section class="sec">
+            <h2 class="h2">3.3 Operator Precedence &amp; Associativity</h2>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Precedence</th><th>Operators</th><th>Associativity</th></tr></thead>
+              <tbody>
+                <tr><td>1 (Highest)</td><td><code class="in">() [] -&gt; .</code></td><td>Left → Right</td></tr>
+                <tr><td>2</td><td><code class="in">++ -- ! ~ + - * &amp; sizeof</code> (unary)</td><td>Right → Left</td></tr>
+                <tr><td>3</td><td><code class="in">* / %</code></td><td>Left → Right</td></tr>
+                <tr><td>4</td><td><code class="in">+ -</code></td><td>Left → Right</td></tr>
+                <tr><td>5</td><td><code class="in">&lt; &lt;= &gt; &gt;=</code></td><td>Left → Right</td></tr>
+                <tr><td>6</td><td><code class="in">== !=</code></td><td>Left → Right</td></tr>
+                <tr><td>7</td><td><code class="in">&amp;&amp;</code></td><td>Left → Right</td></tr>
+                <tr><td>8</td><td><code class="in">||</code></td><td>Left → Right</td></tr>
+                <tr><td>9</td><td><code class="in">?:</code></td><td>Right → Left</td></tr>
+                <tr><td>10 (Lowest)</td><td><code class="in">= += -= *= /= %= ,</code></td><td>Right → Left</td></tr>
+              </tbody>
+            </table></div>
+            <div class="note tip"><div class="nt">✨ Use Parentheses</div>When in doubt, use <code class="in">( )</code> to make your intentions clear: <code class="in">(a + b) * c</code> instead of relying on precedence.</div>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">precedence.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+
+int main()
+{
+    int a = 10, b = 5, c = 2;
+
+    printf("a + b * c     = %d\n", a + b * c);    // 20
+    printf("a - b - c     = %d\n", a - b - c);    // 3
+    printf("(a + b) * c   = %d\n", (a + b) * c);  // 30
+    printf("-a + b        = %d\n", -a + b);       // -5
+
+    return 0;
+}</pre></div>
+          </section>
+
+          <div class="summ">
+            <h3>📝 Chapter 3 Summary</h3>
+            <div class="pt"><b>Arithmetic:</b> + - * / % &nbsp;|&nbsp; <b>Relational:</b> == != &gt; &lt; &gt;= &lt;= &nbsp;|&nbsp; <b>Logical:</b> &amp;&amp; || !</div>
+            <div class="pt"><b>Assignment:</b> = += -= *= /= %= &nbsp;|&nbsp; <b>Increment:</b> ++ -- (pre and post) &nbsp;|&nbsp; <b>Ternary:</b> ? :</div>
+            <div class="pt"><b>Precedence:</b> unary &gt; multiplicative &gt; additive &gt; relational &gt; logical &gt; assignment. Parentheses override everything.</div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             CHAPTER 4 — CORE
+        ============================================================ -->
+        <section class="chapter" id="ch4">
+          <div class="hero">
+            <div class="pills"><span class="pill pink">Chapter 4</span><span class="muted">Core concepts</span></div>
+            <h1 class="h1">Input &amp; Output Operations</h1>
+            <p class="p">Read user input and display results using C's I/O functions — especially single-character I/O.</p>
+          </div>
+
+          <section class="sec">
+            <h2 class="h2">4.1 Single Character I/O</h2>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Function</th><th>Reads</th><th>Echoes?</th><th>Needs Enter?</th><th>Header</th></tr></thead>
+              <tbody>
+                <tr><td><code class="in">getchar()</code></td><td>1 char</td><td>Yes</td><td>Yes</td><td>&lt;stdio.h&gt;</td></tr>
+                <tr><td><code class="in">getche()</code></td><td>1 char</td><td>Yes</td><td>No</td><td>&lt;conio.h&gt;</td></tr>
+                <tr><td><code class="in">getch()</code></td><td>1 char</td><td>No</td><td>No</td><td>&lt;conio.h&gt;</td></tr>
+                <tr><td><code class="in">putchar(ch)</code></td><td>—</td><td>prints 1 char</td><td>—</td><td>&lt;stdio.h&gt;</td></tr>
+              </tbody>
+            </table></div>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">single_char.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+
+int main()
+{
+    char ch;
+    printf("Enter a character: ");
+    ch = getchar();          // wait for input + Enter
+
+    printf("You entered: ");
+    putchar(ch);             // print one character
+    printf("\n");
+
+    return 0;
+}</pre></div>
+          </section>
+
+          <section class="sec">
+            <h2 class="h2">4.2 Formatted Input — scanf()</h2>
+            <p class="p"><code class="in">scanf("format_string", &amp;variable);</code> reads formatted input from the user.</p>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Specifier</th><th>Meaning</th><th>Example</th></tr></thead>
+              <tbody>
+                <tr><td><code class="in">%c</code></td><td>Single character</td><td>scanf("%c", &amp;ch);</td></tr>
+                <tr><td><code class="in">%d</code></td><td>Integer</td><td>scanf("%d", &amp;num);</td></tr>
+                <tr><td><code class="in">%f</code></td><td>Float</td><td>scanf("%f", &amp;price);</td></tr>
+                <tr><td><code class="in">%lf</code></td><td>Double</td><td>scanf("%lf", &amp;value);</td></tr>
+                <tr><td><code class="in">%s</code></td><td>String (no &amp;)</td><td>scanf("%s", name);</td></tr>
+              </tbody>
+            </table></div>
+            <div class="note warn"><div class="nt">⚠️ Don't forget the &amp;</div>Always use <code class="in">&amp;</code> before a variable in <code class="in">scanf()</code> (except for strings/arrays). Forgetting it leads to undefined behaviour!</div>
+          </section>
+
+          <section class="sec">
+            <h2 class="h2">4.3 Formatted Output — printf()</h2>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Flag / Specifier</th><th>Effect</th><th>Example output</th></tr></thead>
+              <tbody>
+                <tr><td><code class="in">%5d</code></td><td>Width of 5, right-aligned</td><td>___10</td></tr>
+                <tr><td><code class="in">%-5d</code></td><td>Width 5, left-aligned</td><td>10___</td></tr>
+                <tr><td><code class="in">%05d</code></td><td>Pad with zeros</td><td>00010</td></tr>
+                <tr><td><code class="in">%.2f</code></td><td>2 decimal places</td><td>3.14</td></tr>
+                <tr><td><code class="in">%10.2f</code></td><td>Width 10, 2 decimals</td><td>______3.14</td></tr>
+              </tbody>
+            </table></div>
+            <p class="p"><strong>Escape sequences:</strong> <code class="in">\n</code> newline · <code class="in">\t</code> tab · <code class="in">\\</code> backslash · <code class="in">\"</code> quote · <code class="in">\0</code> null · <code class="in">\b</code> backspace · <code class="in">\r</code> carriage return</p>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">io_demo.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+
+int main()
+{
+    int age;
+    float height;
+
+    printf("Enter age and height: ");
+    scanf("%d %f", &amp;age, &amp;height);
+
+    printf("Age    : %d\n", age);
+    printf("Height : %.2f\n", height);
+    printf("Padded : %05d\n", age);
+
+    return 0;
+}</pre></div>
+          </section>
+
+          <div class="summ">
+            <h3>📝 Chapter 4 Summary</h3>
+            <div class="pt"><b>stdio.h</b> is required for all I/O functions.</div>
+            <div class="pt"><b>Single-char I/O:</b> <code class="in">getchar()</code>/<code class="in">putchar()</code>, <code class="in">getche()</code> (echoes), <code class="in">getch()</code> (hidden).</div>
+            <div class="pt"><b>scanf:</b> formatted input — always use <code class="in">&amp;</code> before variables.</div>
+            <div class="pt"><b>printf:</b> formatted output with %d, %f, %c, %s and width/precision flags.</div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             CHAPTER 5 — CORE
+        ============================================================ -->
+        <section class="chapter" id="ch5">
+          <div class="hero">
+            <div class="pills"><span class="pill rose">Chapter 5</span><span class="muted">Core concepts</span></div>
+            <h1 class="h1">Conditional Statements &amp; Switch</h1>
+            <p class="p">Control the flow of your program using if, if-else, nested if, else-if ladder and the switch statement.</p>
+          </div>
+
+          <section class="sec">
+            <h2 class="h2">5.1 if, if-else and else-if Ladder</h2>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">grade.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+
+int main()
+{
+    int marks;
+    printf("Enter marks: ");
+    scanf("%d", &amp;marks);
+
+    if (marks &gt;= 90) {
+        printf("Grade: A+\n");
+    } else if (marks &gt;= 75) {
+        printf("Grade: A\n");
+    } else if (marks &gt;= 60) {
+        printf("Grade: B\n");
+    } else if (marks &gt;= 40) {
+        printf("Grade: C\n");
+    } else {
+        printf("Grade: FAIL\n");
+    }
+
+    return 0;
+}</pre></div>
+            <div class="note tip"><div class="nt">✨ Non-zero = true</div>In C, any <strong>non-zero</strong> value is true and <strong>zero</strong> is false. So <code class="in">if (1)</code> always runs, <code class="in">if (0)</code> never runs.</div>
+            <h3 class="h3">Nested if</h3>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i></div><button class="copy-btn">Copy</button></div><pre>if (age &gt;= 18) {
+    if (hasLicense == 1) {
+        printf("You can drive.\n");
+    } else {
+        printf("Apply for a license first.\n");
+    }
+} else {
+    printf("You are too young to drive.\n");
+}</pre></div>
+            <p class="p">Tip: you can often combine conditions with <code class="in">&amp;&amp;</code> instead of nesting — <code class="in">if (age &gt;= 18 &amp;&amp; hasLicense)</code> is cleaner.</p>
+          </section>
+
+          <section class="sec">
+            <h2 class="h2">5.2 The switch Statement</h2>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">switch_day.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+
+int main()
+{
+    int day;
+    printf("Enter day number (1-7): ");
+    scanf("%d", &amp;day);
+
+    switch (day) {
+        case 1: printf("Monday\n");    break;
+        case 2: printf("Tuesday\n");   break;
+        case 3: printf("Wednesday\n"); break;
+        case 4: printf("Thursday\n");  break;
+        case 5: printf("Friday\n");    break;
+        case 6: printf("Saturday\n");  break;
+        case 7: printf("Sunday\n");    break;
+        default: printf("Invalid day!\n");
+    }
+
+    return 0;
+}</pre></div>
+            <h3 class="h3">Rules for switch</h3>
+            <ul class="nice">
+              <li>The expression must be an <strong>integer or character</strong> (not float/double).</li>
+              <li>Case labels must be <strong>constant expressions</strong>, unique.</li>
+              <li><code class="in">break</code> is optional but usually needed — otherwise <strong>fall-through</strong> occurs.</li>
+              <li><code class="in">default</code> is optional, conventionally at the end.</li>
+            </ul>
+            <div class="tblwrap"><table class="tbl">
+              <thead><tr><th>Feature</th><th>if / if-else</th><th>switch</th></tr></thead>
+              <tbody>
+                <tr><td>Test type</td><td>Any relational / logical condition</td><td>Only equality with constants</td></tr>
+                <tr><td>Data types</td><td>Any</td><td>Only int or char</td></tr>
+                <tr><td>Ranges</td><td>Easy (x &gt; 10)</td><td>Not supported</td></tr>
+                <tr><td>Use when</td><td>Conditions are complex or range-based</td><td>One variable checked against fixed values</td></tr>
+              </tbody>
+            </table></div>
+          </section>
+
+          <div class="summ">
+            <h3>📝 Chapter 5 Summary</h3>
+            <div class="pt"><b>if:</b> one-way decision &nbsp;|&nbsp; <b>if-else:</b> two-way &nbsp;|&nbsp; <b>else-if ladder:</b> multi-way with ranges.</div>
+            <div class="pt"><b>Nested if:</b> if inside if for compound conditions.</div>
+            <div class="pt"><b>switch:</b> clean multi-way branch for fixed values — needs <code class="in">break</code> to stop fall-through.</div>
+            <div class="pt">Non-zero = true, zero = false in C.</div>
+          </div>
+        </section>
+
+        <!-- ============================================================
+             CHAPTER 6 — CORE
+        ============================================================ -->
+        <section class="chapter" id="ch6">
+          <div class="hero">
+            <div class="pills"><span class="pill amber">Chapter 6</span><span class="muted">Core concepts</span></div>
+            <h1 class="h1">Looping Statements</h1>
+            <p class="p">Repeat statements with for, while and do-while loops. Control them with break, continue and nesting.</p>
+          </div>
+
+          <section class="sec">
+            <h2 class="h2">6.1 The Three Loops</h2>
+            <div class="grid3">
+              <div class="card"><b>🔁 for</b><div class="s">Use when you know in advance how many times to repeat.<br><code class="in">for (init; condition; update)</code></div></div>
+              <div class="card"><b>🔄 while</b><div class="s">Entry-controlled. Condition is checked before each run.<br><code class="in">while (condition)</code></div></div>
+              <div class="card"><b>➿ do-while</b><div class="s">Exit-controlled. The body runs at least once.<br><code class="in">do { } while (cond);</code></div></div>
+            </div>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">loops.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+
+int main()
+{
+    /* for  : print 1 to 5 */
+    for (int i = 1; i &lt;= 5; i++)
+        printf("%d ", i);          // 1 2 3 4 5
+
+    /* while : sum until 0 entered */
+    int n, sum = 0;
+    printf("\nEnter numbers (0 stops): ");
+    do {
+        scanf("%d", &amp;n);
+        sum += n;
+    } while (n != 0);
+    printf("Total = %d\n", sum);
+
+    return 0;
+}</pre></div>
+          </section>
+
+          <section class="sec">
+            <h2 class="h2">6.2 break and continue</h2>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i></div><button class="copy-btn">Copy</button></div><pre>/* break  : exit the whole loop */
+for (int i = 1; i &lt;= 10; i++) {
+    if (i == 6) break;       // loop ends here
+    printf("%d ", i);        // 1 2 3 4 5
+}
+
+/* continue : skip to next iteration */
+for (int i = 1; i &lt;= 10; i++) {
+    if (i % 2 == 0) continue; // skip evens
+    printf("%d ", i);         // 1 3 5 7 9
+}</pre></div>
+          </section>
+
+          <section class="sec">
+            <h2 class="h2">6.3 Nested Loops</h2>
+            <p class="p">A <strong>nested loop</strong> is a loop inside another loop. The inner loop runs <strong>fully</strong> for every single iteration of the outer loop.</p>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">pattern.c</span></div><button class="copy-btn">Copy</button></div><pre>#include &lt;stdio.h&gt;
+
+int main()
+{
+    int rows = 5;
+
+    for (int i = 1; i &lt;= rows; i++) {
+        for (int j = 1; j &lt;= i; j++) {
+            printf("* ");
+        }
+        printf("\n");
+    }
+
+    return 0;
+}</pre><div class="out"><div class="ol">▸ Output</div><pre>*
+* *
+* * *
+* * * *
+* * * * *</pre></div></div>
+            <div class="code"><div class="code-head"><div class="dots"><i></i><i></i><i></i><span class="fn">prime.c</span></div><button class="copy-btn">Copy</button></div><pre>/* Print all primes from 2 to 30 */
+for (int num = 2; num &lt;= 30; num++) {
+    int isPrime = 1;
+    for (int d = 2; d * d &lt;= num; d++) {
+        if (num % d == 0) {
+            isPrime = 0;
+            break;
+        }
+    }
+    if (isPrime) printf("%d ", num);
+}
+/* 2 3 5 7 11 13 17 19 23 29 */</pre></div>
+          </section>
+
+          <div class="summ">
+            <h3>📝 Chapter 6 Summary</h3>
+            <div class="pt"><b>for:</b> iterations known &nbsp;|&nbsp; <b>while:</b> entry-controlled &nbsp;|&nbsp; <b>do-while:</b> runs at least once (note the semicolon).</div>
+            <div class="pt"><b>break:</b> exits the loop immediately &nbsp;|&nbsp; <b>continue:</b> skips the rest of this iteration.</div>
+            <div class="pt"><b>Nested loops:</b> the inner loop runs completely for each outer iteration — perfect for patterns and tables.</div>
+          </div>
+
+          <div style="border:1px solid rgba(52,211,153,.4);border-radius:18px;padding:24px;text-align:center;margin-top:34px;background:linear-gradient(135deg,rgba(6,78,59,.4),rgba(30,27,75,.4))">
+            <div style="font-size:34px">🎉</div>
+            <h3 style="color:#fff;font-size:19px;margin:6px 0">Unit 1 Complete!</h3>
+            <p style="color:#cbd5e1;font-size:13.5px">You've covered the fundamentals of C programming and control structures. Keep practising with small programs to solidify your understanding.</p>
+          </div>
+        </section>
+
+        <!-- ============ PAGER ============ -->
+        <div class="pager">
+          <button class="pg-btn" id="prevBtn">← Prev</button>
+          <span class="pg-mid" id="pgMid"></span>
+          <button class="pg-btn acc" id="nextBtn">Next →</button>
+        </div>
+        <div class="dots-nav" id="dotsNav"></div>
+        <footer>C Programming R.O.G. · Unit 1 — Fundamentals &amp; Control Structures</footer>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    /* ================= DATA ================= */
+    var chapters = [
+      { id: 1, short: "Introduction to C", title: "Introduction to C Programming", subtitle: "History, Structure, Conventions, Character Set", icon: "📖", color: "linear-gradient(135deg,#10b981,#06b6d4)", deep: true },
+      { id: 2, short: "Data Types & Variables", title: "Identifiers, Data Types & Variables", subtitle: "Keywords, Modifiers, Constants", icon: "🔤", color: "linear-gradient(135deg,#06b6d4,#0ea5e9)", deep: false },
+      { id: 3, short: "Operators", title: "Operators & Precedence", subtitle: "All operators and their rules", icon: "➗", color: "linear-gradient(135deg,#0ea5e9,#8b5cf6)", deep: false },
+      { id: 4, short: "Input & Output", title: "Input & Output Operations", subtitle: "printf, scanf, getchar, putchar", icon: "⌨️", color: "linear-gradient(135deg,#d946ef,#ec4899)", deep: false },
+      { id: 5, short: "Conditionals", title: "Conditional Statements & Switch", subtitle: "if, else, nested if, switch", icon: "🔀", color: "linear-gradient(135deg,#f43f5e,#ec4899)", deep: false },
+      { id: 6, short: "Loops", title: "Looping Statements", subtitle: "for, while, break, continue, nested for", icon: "🔁", color: "linear-gradient(135deg,#f59e0b,#f97316)", deep: false }
+    ];
+
+    /* line explorer */
+    var expLines = [
+      { code: "#include <stdio.h>", tag: "Header", title: "Preprocessor directive (Link section)", color: "#f472b6", desc: "Tells the preprocessor to paste the contents of the header file stdio.h (Standard Input Output) into our program before compiling. This file contains the declarations of printf() and scanf(). It always starts with # and has NO semicolon." },
+      { code: "int main()", tag: "Entry point", title: "main() function header", color: "#a78bfa", desc: "Every C program starts executing from main(). int is the return type - it tells the OS whether the program finished successfully. The empty () means main takes no parameters. Exactly one main must exist." },
+      { code: "{", tag: "Block", title: "Opening brace (start of function body)", color: "#cbd5e1", desc: "Begins the block that contains all statements of main(). Every { must have a matching }. Everything between them belongs to the function." },
+      { code: "    printf(\"Hello, World!\\n\");", tag: "Statement", title: "Executable statement", color: "#6ee7b7", desc: "Calls the library function printf() to print text on the screen. The text inside double quotes is a string literal. \\n is an escape sequence that moves the cursor to the next line. The semicolon ; terminates every C statement." },
+      { code: "    return 0;", tag: "Exit", title: "Return statement", color: "#fcd34d", desc: "Sends the value 0 back to the operating system. By convention 0 means the program completed successfully; any non-zero value signals an error. Returning from main() ends the program." },
+      { code: "}", tag: "Block", title: "Closing brace (end of function body)", color: "#cbd5e1", desc: "Ends main(). The compiler now knows the function is complete. Forgetting this brace is one of the most common beginner errors." }
+    ];
+
+    /* quiz */
+    var quiz = [
+      { q: "C was developed by whom, and in which year?", options: ["Ken Thompson, 1970", "Dennis Ritchie, 1972", "Brian Kernighan, 1978", "Martin Richards, 1967"], answer: 1, explain: "Dennis M. Ritchie developed C in 1972 at Bell Labs. Ken Thompson made B in 1970, Kernighan co-authored the 1978 book, Richards made BCPL in 1967." },
+      { q: "Which language is the immediate ancestor of C?", options: ["ALGOL", "BCPL", "B", "CPL"], answer: 2, explain: "C was created by improving the B language written by Ken Thompson, which itself came from BCPL." },
+      { q: "Which section of a C program is compulsory?", options: ["Documentation section", "Link section", "main() function", "Global declaration section"], answer: 2, explain: "Every C program must contain exactly one main() function and execution always starts there. All other sections are optional." },
+      { q: "How many sections does a complete C program have?", options: ["4", "5", "6", "8"], answer: 2, explain: "Documentation, Link, Definition, Global Declaration, main() and Sub-programs - six sections in total." },
+      { q: "Which stage of the build produces the .i file?", options: ["Compiler", "Preprocessor", "Assembler", "Linker"], answer: 1, explain: "The preprocessor expands #include and #define and writes the expanded source into a .i file." },
+      { q: "The job of the linker is to...", options: ["Remove comments from the source", "Translate C into assembly", "Combine object code with library code", "Allocate memory for variables"], answer: 2, explain: "The linker joins your .o object file with library object files, for example the real code of printf, and produces the final executable." },
+      { q: "How many alphabetic characters are in the C character set?", options: ["26", "46", "52", "62"], answer: 2, explain: "26 uppercase letters A-Z plus 26 lowercase letters a-z makes 52 alphabetic characters." },
+      { q: "Which of these is NOT part of the C character set?", options: ["Digits 0-9", "Alphabets A-Z", "Special symbols", "Devanagari script letters"], answer: 3, explain: "The C character set is limited to ASCII - alphabets, digits and special symbols. Other scripts are not recognised by the compiler." },
+      { q: "Which is the correct convention for a symbolic constant?", options: ["maxValue", "MAX_VALUE", "MaxValue", "max value"], answer: 1, explain: "Symbolic constants are written in ALL UPPER_CASE with underscores, for example MAX_SIZE, PI or TAX_RATE." },
+      { q: "A program compiles and runs but prints a wrong result. This is a...", options: ["Syntax error", "Runtime error", "Logical error", "Linker error"], answer: 2, explain: "A logical error is a flaw in the algorithm or expression. The compiler cannot detect it - only testing the output can." },
+      { q: "Which of the following is NOT a token type in C?", options: ["Keywords", "Identifiers", "Comments", "Strings"], answer: 2, explain: "Comments are stripped out by the preprocessor and never become tokens. The six token types are keywords, identifiers, constants, strings, operators and special symbols." },
+      { q: "Which escape sequence marks the end of a string?", options: ["\\n", "\\0", "\\t", "\\b"], answer: 1, explain: "The null character, ASCII 0, is automatically appended to every string literal in C to mark its end." }
+    ];
+
+    /* ================= STATE ================= */
+    var active = 1;
+
+    function $(sel) { return document.querySelector(sel); }
+    function $all(sel) { return document.querySelectorAll(sel); }
+
+    /* ================= NAV RENDER ================= */
+    function navHTML() {
+      var html = '<p class="nav-label">Unit 1 · Chapters</p><nav class="nav">';
+      chapters.forEach(function (c) {
+        html +=
+          '<button class="nav-btn" data-nav="' + c.id + '">' +
+          '<span class="nav-ico" style="background:' + c.color + '">' + c.icon + '</span>' +
+          '<span class="nav-txt">' +
+          '<span class="nav-meta"><span class="nav-ch">Ch ' + c.id + '</span>' +
+          (c.deep ? '<span class="deep-tag">In-Depth</span>' : '') +
+          '</span>' +
+          '<span class="nav-name">' + c.short + '</span>' +
+          '<span class="nav-sub">' + c.subtitle + '</span>' +
+          '</span></button>';
+      });
+      html += '</nav>' +
+        '<div class="progress-box">' +
+        '<div class="progress-top"><span>Your progress</span><b id="progN">1/6</b></div>' +
+        '<div class="track"><div class="bar" id="progBar" style="width:16.6%"></div></div>' +
+        '</div>';
+      return html;
+    }
+    $('#sideNav').innerHTML = navHTML();
+    $('#drawerNav').innerHTML = navHTML();
+
+    /* dots */
+    function renderDots() {
+      var h = '';
+      chapters.forEach(function (c) {
+        h += '<button class="dbtn' + (c.id === active ? ' on' : '') + '" data-dot="' + c.id + '">' + c.id + '</button>';
+      });
+      $('#dotsNav').innerHTML = h;
+    }
+
+    /* chapter top strip */
+    function renderTop() {
+      var c = chapters[active - 1];
+      $('#chTop').innerHTML =
+        '<span class="chp-ico" style="background:' + c.color + '">' + c.icon + '</span>' +
+        '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + c.title + '</span>';
+    }
+
+    /* ================= SWITCH ================= */
+    function showChapter(id) {
+      active = id;
+      $all('.chapter').forEach(function (s) { s.classList.remove('active'); });
+      $('#ch' + id).classList.add('active');
+
+      $all('.nav-btn').forEach(function (b) {
+        b.classList.toggle('active', +b.dataset.nav === id);
+      });
+      $all('.dbtn').forEach(function (b) {
+        b.classList.toggle('on', +b.dataset.dot === id);
+      });
+
+      var pct = Math.round((id / chapters.length) * 100);
+      $('#progBar').style.width = pct + '%';
+      $('#progN').textContent = id + '/' + chapters.length;
+      $('#headBadge').textContent = id + '/' + chapters.length;
+      $('#pgMid').textContent = 'Chapter ' + id + ' of ' + chapters.length;
+      $('#prevBtn').disabled = id === 1;
+      $('#nextBtn').disabled = id === chapters.length;
+      renderTop();
+      closeDrawer();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    /* ================= DRAWER ================= */
+    function openDrawer() { $('#drawer').classList.add('open'); $('#overlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+    function closeDrawer() { $('#drawer').classList.remove('open'); $('#overlay').classList.remove('open'); document.body.style.overflow = ''; }
+    $('#menuBtn').addEventListener('click', openDrawer);
+    $('#closeDrawer').addEventListener('click', closeDrawer);
+    $('#overlay').addEventListener('click', closeDrawer);
+
+    /* delegation for nav buttons (both copies) */
+    document.addEventListener('click', function (e) {
+      var nav = e.target.closest('[data-nav]');
+      if (nav) { showChapter(+nav.dataset.nav); return; }
+      var dot = e.target.closest('[data-dot]');
+      if (dot) { showChapter(+dot.dataset.dot); return; }
+    });
+
+    $('#prevBtn').addEventListener('click', function () { if (active > 1) showChapter(active - 1); });
+    $('#nextBtn').addEventListener('click', function () { if (active < chapters.length) showChapter(active + 1); });
+
+    /* ================= COPY BUTTONS ================= */
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('.copy-btn');
+      if (!btn) return;
+      var pre = btn.closest('.code').querySelector('pre');
+      var text = pre.textContent.replace(/\n$/, '');
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text);
+      }
+      btn.textContent = '✓ Copied';
+      setTimeout(function () { btn.textContent = 'Copy'; }, 1400);
+    });
+
+    /* ================= LINE EXPLORER ================= */
+    (function renderExplorer() {
+      var box = $('#explorer');
+      if (!box) return;
+      var activeLine = 0;
+      var linesHtml = '';
+      expLines.forEach(function (l, i) {
+        linesHtml += '<button class="exp-line" data-line="' + i + '"><span class="exp-n">' + (i + 1) + '</span><span class="exp-code" style="color:' + l.color + '">' + escapeHtml(l.code) + '</span></button>';
+      });
+      box.innerHTML = linesHtml + '<div class="exp-detail" id="expDetail"></div>';
+
+      function renderDetail(i) {
+        var l = expLines[i];
+        $('#expDetail').innerHTML =
+          '<span class="exp-tag">' + l.tag + '</span><span class="exp-title">' + l.title + '</span>' +
+          '<div class="exp-desc">' + l.desc + '</div>';
+        $all('#explorer .exp-line').forEach(function (b, j) {
+          b.classList.toggle('on', j === i);
+        });
+      }
+      renderDetail(0);
+      box.addEventListener('click', function (e) {
+        var line = e.target.closest('[data-line]');
+        if (line) renderDetail(+line.dataset.line);
+      });
+    })();
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    /* ================= QUIZ ================= */
+    (function renderQuiz() {
+      var list = $('#quizList');
+      if (!list) return;
+      var picked = new Array(quiz.length).fill(null);
+      var scored = false;
+
+      function letter(i) { return String.fromCharCode(65 + i); }
+
+      function draw() {
+        var html = '';
+        quiz.forEach(function (q, qi) {
+          html += '<div class="q-item"><div class="q-text"><span class="qn">Q' + (qi + 1) + '.</span>' + q.q + '</div>';
+          q.options.forEach(function (op, oi) {
+            var cls = 'opt';
+            if (picked[qi] === oi) {
+              cls += (oi === q.answer) ? ' correct' : ' wrong';
+            } else if (picked[qi] !== null && oi === q.answer) {
+              cls += ' correct';
+            }
+            var dis = picked[qi] !== null ? ' disabled' : '';
+            html += '<button class="' + cls + '" data-q="' + qi + '" data-o="' + oi + '"' + dis + '>' +
+              '<span class="L">' + letter(oi) + '</span><span>' + op + '</span></button>';
+          });
+          if (picked[qi] !== null) {
+            html += '<div class="expl"><b>Answer: ' + letter(q.answer) + '.</b> ' + q.explain + '</div>';
+          }
+          html += '</div>';
+        });
+        list.innerHTML = html;
+
+        var answered = picked.every(function (p) { return p !== null; });
+        var act = $('#quizActions');
+        if (scored) {
+          act.innerHTML = '<button class="btn btn-ghost" id="retryBtn">↻ Try Again</button>';
+          $('#retryBtn').addEventListener('click', function () {
+            picked = new Array(quiz.length).fill(null);
+            scored = false;
+            $('#scoreTag').style.display = 'none';
+            draw();
+          });
+        } else if (answered) {
+          act.innerHTML = '<button class="btn btn-primary" id="scoreBtn">Check My Score →</button>';
+          $('#scoreBtn').addEventListener('click', function () {
+            var s = 0;
+            picked.forEach(function (p, i) { if (p === quiz[i].answer) s++; });
+            scored = true;
+            var tag = $('#scoreTag');
+            tag.textContent = 'Score: ' + s + ' / ' + quiz.length;
+            tag.style.display = '';
+            tag.className = 'score-tag';
+            draw();
+          });
+        } else {
+          act.innerHTML = '<button class="btn" style="border:1px solid #334155;color:#64748b;cursor:default">Answer all to see score</button>';
+        }
+      }
+
+      list.addEventListener('click', function (e) {
+        var opt = e.target.closest('[data-q]');
+        if (!opt) return;
+        var qi = +opt.dataset.q, oi = +opt.dataset.o;
+        if (picked[qi] !== null) return;
+        picked[qi] = oi;
+        draw();
+      });
+
+      draw();
+    })();
+
+    /* ================= INIT ================= */
+    showChapter(1);
+    renderDots();
+  </script>
+</body>
 </html>
